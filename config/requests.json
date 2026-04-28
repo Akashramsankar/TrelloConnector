@@ -1,0 +1,323 @@
+{
+  "verify_trello_connection": {
+    "schema": {
+      "method": "GET",
+      "host": "api.trello.com",
+      "path": "/1/members/me?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_boards": {
+    "schema": {
+      "method": "GET",
+      "host": "api.trello.com",
+      "path": "/1/members/me/boards?filter=open&fields=name,url,closed&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_lists": {
+    "schema": {
+      "method": "GET",
+      "host": "api.trello.com",
+      "path": "/1/boards/<%= context.board_id %>/lists?filter=open&fields=name,closed&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_cards": {
+    "schema": {
+      "method": "GET",
+      "host": "api.trello.com",
+      "path": "/1/lists/<%= context.list_id %>/cards?fields=name,url,desc,due,closed,idList,dateLastActivity,labels&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_card_create": {
+    "schema": {
+      "method": "POST",
+      "host": "api.trello.com",
+      "path": "/1/cards?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_card_update": {
+    "schema": {
+      "method": "PUT",
+      "host": "api.trello.com",
+      "path": "/1/cards/<%= context.card_id %>?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_card_comment": {
+    "schema": {
+      "method": "POST",
+      "host": "api.trello.com",
+      "path": "/1/cards/<%= context.card_id %>/actions/comments?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_webhook_create": {
+    "schema": {
+      "method": "POST",
+      "host": "api.trello.com",
+      "path": "/1/tokens/<%= context.trello_token %>/webhooks?key=<%= context.trello_api_key %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_webhook_delete": {
+    "schema": {
+      "method": "DELETE",
+      "host": "api.trello.com",
+      "path": "/1/webhooks/<%= context.webhook_id %>?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "verify_clickup_connection": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/user",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "list_clickup_workspaces_live": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/team",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "list_clickup_spaces_live": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/team/<%= context.team_id %>/space?archived=false",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "list_clickup_lists_live": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/space/<%= context.space_id %>/list?archived=false",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_list_fields_live": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/list/<%= context.list_id %>/field",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "verify_freshdesk_credentials": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= context.domain %>",
+      "path": "/api/v2/agents/me",
+      "headers": {
+        "Authorization": "Basic <%= context.encoded_auth %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "list_admin_ticket_fields_live": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= context.domain %>",
+      "path": "/api/v2/admin/ticket_fields",
+      "headers": {
+        "Authorization": "Basic <%= context.encoded_auth %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_workspaces": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/team",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_spaces": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/team/<%= context.team_id %>/space?archived=false",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_lists": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/space/<%= context.space_id %>/list?archived=false",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_members": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/list/<%= context.list_id %>/member",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_tasks": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/list/<%= context.list_id %>/task?archived=false&include_closed=true&page=<%= context.page %>",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_create": {
+    "schema": {
+      "method": "POST",
+      "host": "api.clickup.com",
+      "path": "/api/v2/list/<%= context.list_id %>/task",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_update": {
+    "schema": {
+      "method": "PUT",
+      "host": "api.clickup.com",
+      "path": "/api/v2/task/<%= context.task_id %>",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_task_live": {
+    "schema": {
+      "method": "GET",
+      "host": "api.clickup.com",
+      "path": "/api/v2/task/<%= context.task_id %>",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_hook_create_live": {
+    "schema": {
+      "method": "POST",
+      "host": "api.clickup.com",
+      "path": "/api/v2/team/<%= context.team_id %>/webhook",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_hook_delete_live": {
+    "schema": {
+      "method": "DELETE",
+      "host": "api.clickup.com",
+      "path": "/api/v2/webhook/<%= context.webhook_id %>",
+      "headers": {
+        "Authorization": "<%= context.clickup_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "freshdesk_note_create_live": {
+    "schema": {
+      "method": "POST",
+      "host": "<%= context.domain %>",
+      "path": "/api/v2/tickets/<%= context.ticket_id %>/notes",
+      "headers": {
+        "Authorization": "Basic <%= context.encoded_auth %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "freshdesk_note_create": {
+    "schema": {
+      "method": "POST",
+      "host": "<%= iparam.domain %>",
+      "path": "/api/v2/tickets/<%= context.ticket_id %>/notes",
+      "headers": {
+        "Authorization": "Basic <%= iparam.api_key %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_comment": {
+    "schema": {
+      "method": "POST",
+      "host": "api.clickup.com",
+      "path": "/api/v2/task/<%= context.task_id %>/comment",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "clickup_set_field": {
+    "schema": {
+      "method": "POST",
+      "host": "api.clickup.com",
+      "path": "/api/v2/task/<%= context.task_id %>/field/<%= context.field_id %>",
+      "headers": {
+        "Authorization": "<%= iparam.clickup_api_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}

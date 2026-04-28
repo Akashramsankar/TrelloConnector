@@ -1,0 +1,103 @@
+{
+  "platform-version": "3.0",
+  "modules": {
+    "common": {
+      "location": {
+        "full_page_app": {
+          "url": "dashboard.html",
+          "icon": "icon.svg"
+        }
+      },
+      "requests": {
+        "verify_trello_connection": {},
+        "trello_boards": {},
+        "trello_lists": {},
+        "trello_cards": {},
+        "trello_card_create": {},
+        "trello_card_update": {},
+        "trello_card_comment": {},
+        "trello_webhook_create": {},
+        "trello_webhook_delete": {},
+        "verify_clickup_connection": {},
+        "list_clickup_workspaces_live": {},
+        "list_clickup_spaces_live": {},
+        "list_clickup_lists_live": {},
+        "clickup_list_fields_live": {},
+        "verify_freshdesk_credentials": {},
+        "list_admin_ticket_fields_live": {},
+        "clickup_workspaces": {},
+        "clickup_spaces": {},
+        "clickup_lists": {},
+        "clickup_members": {},
+        "clickup_tasks": {},
+        "clickup_create": {},
+        "clickup_update": {},
+        "clickup_task_live": {},
+        "clickup_hook_create_live": {},
+        "clickup_hook_delete_live": {},
+        "freshdesk_note_create": {},
+        "freshdesk_note_create_live": {},
+        "clickup_comment": {},
+        "clickup_set_field": {}
+      },
+      "events": {
+        "onAppInstall": {
+          "handler": "onAppInstall"
+        },
+        "afterAppUpdate": {
+          "handler": "afterAppUpdate"
+        },
+        "onAppUninstall": {
+          "handler": "onAppUninstall"
+        },
+        "onExternalEvent": {
+          "handler": "onExternalEvent"
+        }
+      },
+      "functions": {
+        "getDashboardData": {},
+        "getSidebarData": {},
+        "getTrelloBoards": {},
+        "getTrelloLists": {},
+        "getTrelloCards": {},
+        "createTicketCard": {},
+        "syncLinkedTicketCards": {},
+        "linkTicketCard": {},
+        "unlinkTicketCard": {},
+        "getClickupWorkspaces": {},
+        "getClickupSpaces": {},
+        "getClickupLists": {},
+        "getClickupMembers": {},
+        "getClickupTasks": {},
+        "createTicketTask": {},
+        "syncLinkedTicketTasks": {},
+        "linkTicketTask": {},
+        "unlinkTicketTask": {}
+      }
+    },
+    "support_ticket": {
+      "events": {
+        "onTicketUpdate": {
+          "handler": "handleTicketUpdate"
+        },
+        "onConversationCreate": {
+          "handler": "handleConversationCreate"
+        }
+      },
+      "location": {
+        "ticket_sidebar": {
+          "url": "ticket_sidebar.html",
+          "icon": "icon.svg"
+        }
+      }
+    }
+  },
+  "engines": {
+    "node": "24.11.0",
+    "fdk": "10.0.1"
+  },
+  "app": {
+    "tracking_id": "s9hytuyr897n65hk7927",
+    "start_time": "2025-06-07T14:05:19.420Z"
+  }
+}

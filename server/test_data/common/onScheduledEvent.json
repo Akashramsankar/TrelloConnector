@@ -1,0 +1,22 @@
+{
+  "data": {
+    "parent_ticket_id": 10,
+    "parent_subject": "Sample parent ticket",
+    "scheduled_time": 1749467160000,
+    "created_by": {
+      "id": 1120000105240,
+      "name": "Test User"
+    },
+    "created_at": 1749467133626,
+    "private_note": "Remember to follow up on billing.",
+    "ticket_payload": {
+      "subject": "Future ticket example",
+      "description": "This is the future ticket description.",
+      "email": "requester@example.com"
+    },
+    "status": "scheduled"
+  },
+  "iparams": {
+    "add_tag_on_future": true
+  }
+}

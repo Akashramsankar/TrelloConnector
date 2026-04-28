@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trello Card Modal</title>
+  <script src="{{{appclient}}}"></script>
+  <style>
+    :root {
+      --text: #12344d;
+      --muted: #5f7386;
+      --border: #d6dde8;
+      --surface: #ffffff;
+      --surface-soft: #f7f9fc;
+      --surface-subtle: #f1f5f9;
+      --primary: #264ac6;
+      --primary-dark: #1f40ad;
+      --success: #0b7a5c;
+      --danger: #c82124;
+      --success-soft: #edf9f3;
+      --danger-soft: #fff1ef;
+      --info-soft: #eef5ff;
+      --shadow: 0 10px 30px rgba(18, 52, 77, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: #f5f7fb;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .shell {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hero {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #2956d6;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.3;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .ticket-summary {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid #dce6f3;
+      border-radius: 12px;
+      background: #f6f9fe;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .status,
+    .message {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      line-height: 1.6;
+      background: #ffffff;
+    }
+
+    .status.is-visible,
+    .message.is-visible {
+      display: block;
+    }
+
+    .status {
+      background: var(--info-soft);
+      border-color: #bfd4ff;
+      color: #1d4fa3;
+    }
+
+    .message.error {
+      background: var(--danger-soft);
+      border-color: #f1c7ca;
+      color: var(--danger);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 18px 20px 10px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .panel-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .panel-body {
+      padding: 0 20px 20px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .field label span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 12px;
+      background: #ffffff;
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: #7fa7ff;
+      box-shadow: 0 0 0 3px rgba(38, 74, 198, 0.12);
+    }
+
+    .field input:disabled,
+    .field select:disabled,
+    .field textarea:disabled {
+      background: var(--surface-subtle);
+      color: #7590a8;
+      cursor: not-allowed;
+    }
+
+    .field textarea {
+      min-height: 200px;
+      resize: vertical;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-bottom: 4px;
+    }
+
+    .btn {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      border-color: #b8c8da;
+      background: #f9fbfe;
+    }
+
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      border-color: var(--primary-dark);
+      background: var(--primary-dark);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 840px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="shell">
+      <section class="hero">
+        <p id="modalEyebrow" class="eyebrow">Trello</p>
+        <h1 id="modalTitle">Create Trello Card</h1>
+        <p id="modalCopy">Review the details, pick the destination, and link this card back to the Freshdesk ticket.</p>
+        <div id="ticketSummary" class="ticket-summary">Ticket details are loading...</div>
+      </section>
+
+      <div id="statusBanner" class="status"></div>
+      <div id="modalMessage" class="message"></div>
+
+      <div class="layout">
+        <div class="stack">
+          <section class="panel">
+            <div class="panel-head">
+              <h2 id="detailsTitle">Card Details</h2>
+              <p id="detailsCopy">These values will be used when the Trello card is created.</p>
+            </div>
+            <div class="panel-body">
+              <div id="createSection" class="field-grid">
+                <div class="field full">
+                  <label for="taskTitle">Card Title</label>
+                  <input id="taskTitle" type="text" />
+                </div>
+                <div class="field full">
+                  <label for="taskDescription">Card Description</label>
+                  <textarea id="taskDescription"></textarea>
+                </div>
+                <div class="field full">
+                  <label for="dueDateInput">Due Date <span>Optional</span></label>
+                  <input id="dueDateInput" type="date" />
+                </div>
+              </div>
+
+              <div id="linkSection" class="field-grid hidden">
+                <div class="field full">
+                  <label for="taskSelect">Card</label>
+                  <select id="taskSelect"></select>
+                </div>
+                <p class="note">Only cards from the selected Trello list that are not already linked to this ticket are shown here.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="stack">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Trello Destination</h2>
+              <p>Pick the board and list where this linked card should live.</p>
+            </div>
+            <div class="panel-body">
+              <div class="field-grid">
+                <div class="field full">
+                  <label for="boardSelect">Board</label>
+                  <select id="boardSelect"></select>
+                </div>
+                <div class="field full">
+                  <label for="listSelect">List</label>
+                  <select id="listSelect"></select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Actions</h2>
+              <p>Nothing is sent to Trello until you confirm below.</p>
+            </div>
+            <div class="panel-body">
+              <div class="actions">
+                <button id="cancelBtn" type="button" class="btn">Cancel</button>
+                <button id="submitBtn" type="button" class="btn btn-primary">Create and Link</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="./scripts/app.js"></script>
+</body>
+</html>
