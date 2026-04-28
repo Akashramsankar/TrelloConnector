@@ -19,6 +19,26 @@
       }
     }
   },
+  "trello_members": {
+    "schema": {
+      "method": "GET",
+      "host": "api.trello.com",
+      "path": "/1/boards/<%= context.board_id %>/members?fields=fullName,username,avatarUrl&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_labels": {
+    "schema": {
+      "method": "GET",
+      "host": "api.trello.com",
+      "path": "/1/boards/<%= context.board_id %>/labels?fields=name,color&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
   "trello_lists": {
     "schema": {
       "method": "GET",
@@ -64,6 +84,26 @@
       "method": "POST",
       "host": "api.trello.com",
       "path": "/1/cards/<%= context.card_id %>/actions/comments?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_card_member_add": {
+    "schema": {
+      "method": "POST",
+      "host": "api.trello.com",
+      "path": "/1/cards/<%= context.card_id %>/idMembers?value=<%= context.value %>&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_card_label_add": {
+    "schema": {
+      "method": "POST",
+      "host": "api.trello.com",
+      "path": "/1/cards/<%= context.card_id %>/idLabels?value=<%= context.value %>&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
       "headers": {
         "Content-Type": "application/json"
       }

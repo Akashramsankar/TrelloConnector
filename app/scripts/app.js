@@ -6,6 +6,8 @@ const state = {
   submitting: false,
   iparams: {},
   boards: [],
+  labelsByBoard: {},
+  membersByBoard: {},
   listsByBoard: {},
   cardsByList: {},
   form: {
@@ -17,6 +19,8 @@ const state = {
     boardId: "",
     listId: "",
     dueDate: "",
+    memberIds: [],
+    labelIds: [],
     taskId: "",
   },
   message: {
@@ -96,6 +100,8 @@ function bindRefs() {
   refs.taskTitle = document.getElementById("taskTitle");
   refs.taskDescription = document.getElementById("taskDescription");
   refs.dueDateInput = document.getElementById("dueDateInput");
+  refs.memberSelect = document.getElementById("memberSelect");
+  refs.labelSelect = document.getElementById("labelSelect");
   refs.taskSelect = document.getElementById("taskSelect");
   refs.boardSelect = document.getElementById("boardSelect");
   refs.listSelect = document.getElementById("listSelect");
@@ -122,6 +128,12 @@ function bindEvents() {
   });
   refs.dueDateInput.addEventListener("change", (event) => {
     state.form.dueDate = event.target.value;
+  });
+  refs.memberSelect.addEventListener("change", (event) => {
+    state.form.memberIds = event.target.value ? [event.target.value] : [];
+  });
+  refs.labelSelect.addEventListener("change", (event) => {
+    state.form.labelIds = event.target.value ? [event.target.value] : [];
   });
   refs.taskSelect.addEventListener("change", (event) => {
     state.form.taskId = event.target.value;
@@ -155,6 +167,22 @@ function render() {
   refs.taskTitle.value = state.form.title;
   refs.taskDescription.value = state.form.description;
   refs.dueDateInput.value = state.form.dueDate;
+  refs.memberSelect.innerHTML = buildMultiSelectOptions(
+    getMembersForCurrentBoard().map((member) => ({
+      id: member.id,
+      name: member.name,
+    })),
+    state.form.memberIds[0] || "",
+    state.form.boardId ? "Select a member" : "Choose a board first"
+  );
+  refs.labelSelect.innerHTML = buildSelectOptions(
+    getLabelsForCurrentBoard().map((label) => ({
+      id: label.id,
+      name: formatLabelOption(label),
+    })),
+    state.form.labelIds[0] || "",
+    state.form.boardId ? "Select a label" : "Choose a board first"
+  );
   refs.boardSelect.innerHTML = buildSelectOptions(
     state.boards,
     state.form.boardId,
@@ -177,6 +205,8 @@ function render() {
   refs.taskTitle.disabled = disableForm;
   refs.taskDescription.disabled = disableForm;
   refs.dueDateInput.disabled = disableForm;
+  refs.memberSelect.disabled = disableForm || !state.form.boardId;
+  refs.labelSelect.disabled = disableForm || !state.form.boardId;
   refs.taskSelect.disabled = disableForm || !state.form.listId;
   refs.boardSelect.disabled = disableForm;
   refs.listSelect.disabled = disableForm || !state.form.boardId;
@@ -224,9 +254,11 @@ async function handleBoardChange() {
   state.form.boardId = refs.boardSelect.value;
   state.form.listId = "";
   state.form.taskId = "";
+  state.form.memberIds = [];
+  state.form.labelIds = [];
   clearMessage();
   state.loading = true;
-  state.loadingMessage = "Loading lists for the selected board...";
+  state.loadingMessage = "Loading board details...";
   render();
 
   try {
@@ -299,6 +331,10 @@ async function submitCreate() {
       list_id: state.form.listId,
       list_name: getListName(state.form.listId),
       due_date: state.form.dueDate,
+      member_ids: state.form.memberIds,
+      members: getSelectedMembers(),
+      label_ids: state.form.labelIds,
+      labels: getSelectedLabels(),
       trello_api_key: getTrelloApiKey(),
       trello_to_freshdesk_notifications: state.iparams.trello_to_freshdesk_notifications || {},
       freshdesk_to_trello_notifications: state.iparams.freshdesk_to_trello_notifications || {},
@@ -407,7 +443,11 @@ async function prepareSelections() {
   }
 
   await loadListsForBoardIfNeeded(state.form.boardId);
+  await loadMembersForBoardIfNeeded(state.form.boardId);
+  await loadLabelsForBoardIfNeeded(state.form.boardId);
   state.form.listId = pickAvailableId(getListsForCurrentBoard(), state.form.listId);
+  state.form.memberIds = pickSingleAvailableId(getMembersForCurrentBoard(), state.form.memberIds);
+  state.form.labelIds = pickSingleAvailableId(getLabelsForCurrentBoard(), state.form.labelIds);
 }
 
 async function loadListsForBoardIfNeeded(boardId) {
@@ -421,6 +461,32 @@ async function loadListsForBoardIfNeeded(boardId) {
   });
 
   state.listsByBoard[boardId] = Array.isArray(payload.lists) ? payload.lists : [];
+}
+
+async function loadMembersForBoardIfNeeded(boardId) {
+  if (!boardId || state.membersByBoard[boardId]) {
+    return;
+  }
+
+  const payload = await invokeServerFunction("getTrelloMembers", {
+    board_id: boardId,
+    trello_api_key: getTrelloApiKey(),
+  });
+
+  state.membersByBoard[boardId] = Array.isArray(payload.members) ? payload.members : [];
+}
+
+async function loadLabelsForBoardIfNeeded(boardId) {
+  if (!boardId || state.labelsByBoard[boardId]) {
+    return;
+  }
+
+  const payload = await invokeServerFunction("getTrelloLabels", {
+    board_id: boardId,
+    trello_api_key: getTrelloApiKey(),
+  });
+
+  state.labelsByBoard[boardId] = Array.isArray(payload.labels) ? payload.labels : [];
 }
 
 async function loadCardsForListIfNeeded(listId, forceReload) {
@@ -445,6 +511,14 @@ async function loadCardsForListIfNeeded(listId, forceReload) {
 
 function getListsForCurrentBoard() {
   return state.listsByBoard[state.form.boardId] || [];
+}
+
+function getMembersForCurrentBoard() {
+  return state.membersByBoard[state.form.boardId] || [];
+}
+
+function getLabelsForCurrentBoard() {
+  return state.labelsByBoard[state.form.boardId] || [];
 }
 
 function getLinkableCardsForCurrentList() {
@@ -472,6 +546,16 @@ function ensureSelectedCard() {
   );
 }
 
+function getSelectedMembers() {
+  const selectedIds = new Set(state.form.memberIds);
+  return getMembersForCurrentBoard().filter((member) => selectedIds.has(member.id));
+}
+
+function getSelectedLabels() {
+  const selectedIds = new Set(state.form.labelIds);
+  return getLabelsForCurrentBoard().filter((label) => selectedIds.has(label.id));
+}
+
 function getBoardName(boardId) {
   const match = state.boards.find((board) => board.id === boardId);
   return match ? match.name : "";
@@ -493,6 +577,17 @@ function pickAvailableId(items, preferredId) {
   return options.length ? options[0].id : "";
 }
 
+function pickSingleAvailableId(items, preferredIds) {
+  const firstPreferred = Array.isArray(preferredIds) && preferredIds.length ? preferredIds[0] : "";
+  const options = Array.isArray(items) ? items : [];
+
+  if (firstPreferred && options.some((item) => item.id === firstPreferred)) {
+    return [firstPreferred];
+  }
+
+  return [];
+}
+
 function buildSelectOptions(items, selectedId, placeholder) {
   const options = Array.isArray(items) ? items : [];
   return `<option value="">${escapeHtml(placeholder || "Select an option")}</option>${options
@@ -501,6 +596,21 @@ function buildSelectOptions(items, selectedId, placeholder) {
       return `<option value="${escapeAttribute(item.id)}"${selected}>${escapeHtml(item.name)}</option>`;
     })
     .join("")}`;
+}
+
+function buildMultiSelectOptions(items, selectedId, placeholder) {
+  return buildSelectOptions(items, selectedId, placeholder);
+}
+
+function formatLabelOption(label) {
+  const name = normalizeText(label && label.name);
+  const color = normalizeText(label && label.color);
+
+  if (name && color) {
+    return `${name} (${color})`;
+  }
+
+  return name || color || "Unnamed label";
 }
 
 function buildTicketSummary() {

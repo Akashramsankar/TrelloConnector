@@ -252,8 +252,8 @@ function renderTaskList() {
   refs.taskList.innerHTML = state.linkedTasks
     .map((task) => {
       const location = [task.workspace_name, task.space_name, task.list_name].filter(Boolean).join(" / ");
+      const labels = normalizeLabels(task.labels || task.priority_label);
       const meta = [
-        task.priority_label,
         task.status,
         task.due_date ? `Due ${formatDate(task.due_date)}` : "",
         formatAssigneeLabel(task.assignees),
@@ -293,6 +293,7 @@ function renderTaskList() {
               </div>
             </div>
           </div>
+          ${labels.length ? `<div class="label-row">${labels.map(renderLabelChip).join("")}</div>` : ""}
           ${meta.length ? `<div class="meta">${meta.map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("")}</div>` : ""}
           ${task.last_sync_error ? `<div class="sync-error">${escapeHtml(task.last_sync_error)}</div>` : ""}
         </article>
@@ -563,6 +564,93 @@ function formatAssigneeLabel(assignees) {
   }
 
   return `${names[0]} +${names.length - 1}`;
+}
+
+function normalizeLabels(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((label) => normalizeLabelObject(label))
+      .filter(Boolean);
+  }
+
+  const text = normalizeText(value);
+  if (!text) {
+    return [];
+  }
+
+  return text
+    .split(",")
+    .map((item) => normalizeLabelObject({ name: item.trim() }))
+    .filter(Boolean);
+}
+
+function normalizeLabelObject(label) {
+  const name = normalizeText(label && (label.name || label.label || label.title));
+  const color = normalizeText(label && label.color).toLowerCase();
+
+  if (!name && !color) {
+    return null;
+  }
+
+  return {
+    name: name || getTrelloColorLabel(color),
+    color,
+  };
+}
+
+function renderLabelChip(label) {
+  const textColor = getTrelloColorHex(label.color);
+  const background = getTrelloColorTint(label.color);
+
+  return `
+    <span class="label-chip" style="background:${escapeAttribute(background)}; color:${escapeAttribute(textColor)};">
+      <span class="label-chip-dot"></span>
+      ${escapeHtml(label.name)}
+    </span>
+  `;
+}
+
+function getTrelloColorHex(color) {
+  const palette = {
+    green: "#2f7d32",
+    yellow: "#8a6d00",
+    orange: "#b75a00",
+    red: "#b42318",
+    purple: "#7a3db8",
+    blue: "#005fa3",
+    sky: "#007b8f",
+    lime: "#1b7f56",
+    pink: "#b23b79",
+    black: "#344563",
+  };
+
+  return palette[normalizeText(color).toLowerCase()] || "#39556f";
+}
+
+function getTrelloColorTint(color) {
+  const palette = {
+    green: "#e9f7e7",
+    yellow: "#fff6d9",
+    orange: "#fff0df",
+    red: "#fdeceb",
+    purple: "#f4ebff",
+    blue: "#e7f1fb",
+    sky: "#e6f8fb",
+    lime: "#e8fbf1",
+    pink: "#fdebf4",
+    black: "#ebedf0",
+  };
+
+  return palette[normalizeText(color).toLowerCase()] || "#eaf0f7";
+}
+
+function getTrelloColorLabel(color) {
+  const normalized = normalizeText(color);
+  if (!normalized) {
+    return "Trello label";
+  }
+
+  return `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)} label`;
 }
 
 function escapeHtml(value) {

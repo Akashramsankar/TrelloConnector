@@ -631,6 +631,33 @@ function normalizeTrelloLabels(items) {
     .filter(Boolean);
 }
 
+function normalizeTrelloMember(item) {
+  const id = normalizeText(item && item.id);
+  if (!id) {
+    return null;
+  }
+
+  return {
+    id,
+    name: normalizeText(item && (item.fullName || item.username || item.name)) || `Member ${id}`,
+    username: normalizeText(item && item.username),
+    avatar_url: normalizeText(item && item.avatarUrl),
+  };
+}
+
+function normalizeTrelloLabel(item) {
+  const id = normalizeText(item && item.id);
+  if (!id) {
+    return null;
+  }
+
+  return {
+    id,
+    name: normalizeText(item && item.name),
+    color: normalizeText(item && item.color),
+  };
+}
+
 function normalizeTrelloCardRecord(card, meta) {
   const cardId = normalizeText(card && card.id ? card.id : meta && meta.task_id);
   if (!cardId) {
@@ -654,11 +681,12 @@ function normalizeTrelloCardRecord(card, meta) {
     priority_label: labels.join(", "),
     status: isClosed ? "Archived" : "Open",
     due_date: normalizeDueDate(card && card.due ? card.due : meta && meta.due_date),
-    assignees: [],
+    assignees: normalizeAssignees(meta && meta.assignees),
     linked_at: normalizeText(meta && meta.linked_at) || new Date().toISOString(),
     source: normalizeText(meta && meta.source) || "linked",
     last_synced_at: normalizeText(meta && meta.last_synced_at),
     last_sync_error: normalizeText(meta && meta.last_sync_error),
+    labels,
   };
 }
 
@@ -1196,6 +1224,8 @@ function buildTrelloTaskMetaFromStoredRecord(taskRecord) {
     workspace_name: normalizeText(taskRecord && taskRecord.workspace_name),
     list_id: normalizeText(taskRecord && taskRecord.list_id),
     list_name: normalizeText(taskRecord && taskRecord.list_name),
+    assignees: normalizeAssignees(taskRecord && taskRecord.assignees),
+    labels: Array.isArray(taskRecord && taskRecord.labels) ? taskRecord.labels : [],
     linked_at: normalizeText(taskRecord && taskRecord.linked_at) || new Date().toISOString(),
     source: normalizeText(taskRecord && taskRecord.source) || "linked",
     last_sync_error: normalizeText(taskRecord && taskRecord.last_sync_error),
@@ -2097,6 +2127,61 @@ async function createTrelloCardComment(cardId, commentText, trelloApiKey) {
     ),
     "Could not add the Trello comment."
   );
+}
+
+async function addMemberToTrelloCard(cardId, memberId, trelloApiKey) {
+  ensureSuccess(
+    await invokeTemplate(
+      "trello_card_member_add",
+      await buildTrelloRequestContext(
+        {
+          card_id: normalizeText(cardId),
+          value: normalizeText(memberId),
+        },
+        trelloApiKey
+      )
+    ),
+    "Could not assign the Trello member."
+  );
+}
+
+async function addLabelToTrelloCard(cardId, labelId, trelloApiKey) {
+  ensureSuccess(
+    await invokeTemplate(
+      "trello_card_label_add",
+      await buildTrelloRequestContext(
+        {
+          card_id: normalizeText(cardId),
+          value: normalizeText(labelId),
+        },
+        trelloApiKey
+      )
+    ),
+    "Could not add the Trello label."
+  );
+}
+
+async function applySelectionsToTrelloCard(cardId, memberIds, labelIds, trelloApiKey) {
+  const errors = [];
+  const normalizedCardId = normalizeText(cardId);
+
+  for (let index = 0; index < memberIds.length; index += 1) {
+    try {
+      await addMemberToTrelloCard(normalizedCardId, memberIds[index], trelloApiKey);
+    } catch (error) {
+      errors.push(`member ${normalizeText(memberIds[index])}: ${extractErrorMessage(error, "Member assignment failed.")}`);
+    }
+  }
+
+  for (let index = 0; index < labelIds.length; index += 1) {
+    try {
+      await addLabelToTrelloCard(normalizedCardId, labelIds[index], trelloApiKey);
+    } catch (error) {
+      errors.push(`label ${normalizeText(labelIds[index])}: ${extractErrorMessage(error, "Label assignment failed.")}`);
+    }
+  }
+
+  return errors;
 }
 
 async function syncCommentToStoredCards(ticketId, commentText, failureMessage, trelloApiKey) {
@@ -3090,6 +3175,78 @@ exports = {
     }
   },
 
+  async getTrelloMembers(args) {
+    let requestContext = null;
+    try {
+      const requestArgs = parseArgs(args);
+      const boardId = normalizeText(requestArgs.board_id);
+
+      if (!boardId) {
+        return buildFailure("Board ID is required.");
+      }
+
+      requestContext = await buildTrelloRequestContext(
+        {
+          board_id: boardId,
+        },
+        requestArgs.trello_api_key,
+        "",
+        requestArgs
+      );
+
+      const payload = ensureSuccess(
+        await invokeTemplate("trello_members", requestContext),
+        "Could not load Trello members."
+      );
+      const members = (Array.isArray(payload) ? payload : []).map(normalizeTrelloMember).filter(Boolean);
+      return buildSuccess({ members });
+    } catch (error) {
+      console.error("[Trello] Failed to load members:", {
+        board_id: normalizeText(args && parseArgs(args).board_id),
+        token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
+        token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+        message: extractErrorMessage(error, "Unable to load Trello members."),
+      });
+      return buildFailure("Unable to load Trello members.", error);
+    }
+  },
+
+  async getTrelloLabels(args) {
+    let requestContext = null;
+    try {
+      const requestArgs = parseArgs(args);
+      const boardId = normalizeText(requestArgs.board_id);
+
+      if (!boardId) {
+        return buildFailure("Board ID is required.");
+      }
+
+      requestContext = await buildTrelloRequestContext(
+        {
+          board_id: boardId,
+        },
+        requestArgs.trello_api_key,
+        "",
+        requestArgs
+      );
+
+      const payload = ensureSuccess(
+        await invokeTemplate("trello_labels", requestContext),
+        "Could not load Trello labels."
+      );
+      const labels = (Array.isArray(payload) ? payload : []).map(normalizeTrelloLabel).filter(Boolean);
+      return buildSuccess({ labels });
+    } catch (error) {
+      console.error("[Trello] Failed to load labels:", {
+        board_id: normalizeText(args && parseArgs(args).board_id),
+        token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
+        token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+        message: extractErrorMessage(error, "Unable to load Trello labels."),
+      });
+      return buildFailure("Unable to load Trello labels.", error);
+    }
+  },
+
   async getTrelloLists(args) {
     let requestContext = null;
     try {
@@ -3206,6 +3363,8 @@ exports = {
         name: title,
         desc: description,
       };
+      const memberIds = normalizeStringList(requestArgs.member_ids);
+      const labelIds = normalizeStringList(requestArgs.label_ids);
 
       const dueDate = normalizeText(requestArgs.due_date);
       if (dueDate) {
@@ -3232,6 +3391,8 @@ exports = {
         workspace_name: normalizeText(requestArgs.board_name),
         list_id: listId,
         list_name: normalizeText(requestArgs.list_name),
+        assignees: normalizeAssignees(requestArgs.members),
+        labels: (Array.isArray(requestArgs.labels) ? requestArgs.labels : []).map(normalizeTrelloLabel).filter(Boolean),
         source: "created",
         linked_at: new Date().toISOString(),
       });
@@ -3241,6 +3402,14 @@ exports = {
       await writeTicketLinks(ticketId, nextTasks);
 
       const linkedActionErrors = await applyLinkedCardNotifications(requestArgs.ticket || {}, cardRecord, requestArgs);
+
+      const selectionErrors = await applySelectionsToTrelloCard(
+        normalizeText(cardRecord && cardRecord.task_id),
+        memberIds,
+        labelIds,
+        requestArgs.trello_api_key
+      );
+      linkedActionErrors.push(...selectionErrors);
 
       try {
         await ensureTrelloWebhookRegistration(cardRecord, requestArgs.trello_api_key);
