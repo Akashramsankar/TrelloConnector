@@ -53,7 +53,7 @@
     "schema": {
       "method": "GET",
       "host": "api.trello.com",
-      "path": "/1/lists/<%= context.list_id %>/cards?fields=name,url,desc,due,closed,idList,dateLastActivity,labels&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "path": "/1/lists/<%= context.list_id %>/cards?fields=name,url,desc,due,closed,idList,dateLastActivity,labels&members=true&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
       "headers": {
         "Content-Type": "application/json"
       }

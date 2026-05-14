@@ -627,7 +627,19 @@ function normalizeTrelloList(item) {
 
 function normalizeTrelloLabels(items) {
   return (Array.isArray(items) ? items : [])
-    .map((label) => normalizeText(label && (label.name || label.color)))
+    .map((item) => {
+      if (!item) {
+        return null;
+      }
+      if (typeof item === "string") {
+        const text = normalizeText(item);
+        return text ? { id: "", name: text, color: "" } : null;
+      }
+      const id = normalizeText(item.id);
+      const name = normalizeText(item.name);
+      const color = normalizeText(item.color);
+      return (id || name || color) ? { id, name, color } : null;
+    })
     .filter(Boolean);
 }
 
@@ -664,7 +676,16 @@ function normalizeTrelloCardRecord(card, meta) {
     return null;
   }
 
-  const labels = normalizeTrelloLabels(card && card.labels ? card.labels : meta && meta.labels);
+  const cardLabels = Array.isArray(card && card.labels) ? card.labels : null;
+  const labels = normalizeTrelloLabels(
+    (cardLabels && cardLabels.length) ? cardLabels : (meta && meta.labels)
+  );
+
+  const cardMembers = Array.isArray(card && card.members) ? card.members : [];
+  const assignees = cardMembers.length
+    ? normalizeAssignees(cardMembers)
+    : normalizeAssignees(meta && meta.assignees);
+
   const isClosed = Boolean(card && card.closed);
 
   return {
@@ -678,10 +699,10 @@ function normalizeTrelloCardRecord(card, meta) {
     list_id: normalizeText(meta && meta.list_id) || normalizeText(card && card.idList),
     list_name: normalizeText(meta && meta.list_name),
     priority: "",
-    priority_label: labels.join(", "),
+    priority_label: labels.map((l) => l.name || l.color).filter(Boolean).join(", "),
     status: isClosed ? "Archived" : "Open",
     due_date: normalizeDueDate(card && card.due ? card.due : meta && meta.due_date),
-    assignees: normalizeAssignees(meta && meta.assignees),
+    assignees,
     linked_at: normalizeText(meta && meta.linked_at) || new Date().toISOString(),
     source: normalizeText(meta && meta.source) || "linked",
     last_synced_at: normalizeText(meta && meta.last_synced_at),
@@ -791,7 +812,7 @@ function normalizeAssignee(item) {
   return {
     id,
     name:
-      normalizeText(item && (item.username || item.name || item.email)) ||
+      normalizeText(item && (item.fullName || item.name || item.username || item.email)) ||
       `User ${id}`,
     email: normalizeText(item && item.email),
   };
@@ -2253,7 +2274,7 @@ function buildTrelloTicketLinkedNoteBody(ticket, taskRecord) {
     .join(" / ");
 
   return [
-    `<p><strong>Trello link ready</strong></p>`,
+    `<p><strong>🔗 Trello link ready</strong></p>`,
     `<p>${buildTrelloCardAnchor(taskRecord)} is now connected to ticket #${escapeHtml(ticketId || "unknown")}${subject ? ` - ${escapeHtml(subject)}` : ""}.</p>`,
     location ? `<p>Saved under ${escapeHtml(location)}.</p>` : "",
   ]
@@ -2415,17 +2436,25 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
         normalizeText(data && data.list && data.list.name) ||
         normalizeText(taskRecord && taskRecord.list_name);
 
+      const moveDetail = fromList && toList
+        ? `<br /><strong style="color:#c0392b;">${escapeHtml(fromList)}</strong> &rarr; <strong style="color:#27ae60;">${escapeHtml(toList)}</strong>`
+        : toList
+        ? ` to <strong style="color:#27ae60;">${escapeHtml(toList)}</strong>`
+        : fromList
+        ? ` from <strong style="color:#c0392b;">${escapeHtml(fromList)}</strong>`
+        : "";
+
       return [
-        `<p><strong>Trello card moved</strong></p>`,
-        `<p>${cardLabel} was moved by ${escapeHtml(actorName)}${toList ? ` to <strong>${escapeHtml(toList)}</strong>` : ""}${fromList ? ` from ${escapeHtml(fromList)}` : ""}.</p>`,
+        `<p><strong>🚀 Trello card moved</strong></p>`,
+        `<p>${cardLabel} was moved by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>${moveDetail}.</p>`,
       ].join("");
     }
     case "card_comment_added": {
       const commentText = escapeHtml(normalizeText(data && data.text)).replace(/\n/g, "<br />");
       return [
-        `<p><strong>New Trello comment</strong> on ${cardLabel}</p>`,
-        `<p>Added by ${escapeHtml(actorName)}.</p>`,
-        commentText ? `<p>${commentText}</p>` : "",
+        `<p><strong>💬 New Trello comment</strong> on ${cardLabel}</p>`,
+        `<p>Added by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>.</p>`,
+        commentText ? `<p style="border-left:3px solid #3498db; padding-left:8px; color:#555;">${commentText}</p>` : "",
       ]
         .filter(Boolean)
         .join("");
@@ -2438,8 +2467,8 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
         ) || "a Trello member";
 
       return [
-        `<p><strong>Trello member update</strong></p>`,
-        `<p>${escapeHtml(addedMember)} was added to ${cardLabel} by ${escapeHtml(actorName)}.</p>`,
+        `<p><strong>👤 Trello member update</strong></p>`,
+        `<p><strong style="color:#27ae60;">${escapeHtml(addedMember)}</strong> was added to ${cardLabel} by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>.</p>`,
       ].join("");
     }
     case "card_labels_updated": {
@@ -2448,34 +2477,40 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
         normalizeText(data && data.text);
 
       return [
-        `<p><strong>Trello labels changed</strong></p>`,
-        `<p>${cardLabel} had its labels updated by ${escapeHtml(actorName)}${labelName ? ` (${escapeHtml(labelName)})` : ""}.</p>`,
+        `<p><strong>🏷️ Trello labels changed</strong></p>`,
+        `<p>${cardLabel} had its labels updated by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>${labelName ? ` (<strong style="color:#8e44ad;">${escapeHtml(labelName)}</strong>)` : ""}.</p>`,
       ].join("");
     }
     case "card_due_date_updated": {
-      const dueDate =
+      const oldDueRaw = data && data.old && Object.prototype.hasOwnProperty.call(data.old, "due") ? data.old.due : undefined;
+      const oldDue = oldDueRaw !== undefined ? (formatDateTime(oldDueRaw) || "No due date") : null;
+      const newDue =
         formatDateTime(data && data.card && data.card.due) ||
         formatDateTime(taskRecord && taskRecord.due_date) ||
-        "No due date is currently set";
+        "No due date";
+
+      const dueLine = oldDue !== null
+        ? `<strong style="color:#c0392b;">${escapeHtml(oldDue)}</strong> &rarr; <strong style="color:#27ae60;">${escapeHtml(newDue)}</strong>`
+        : `<strong style="color:#27ae60;">${escapeHtml(newDue)}</strong>`;
 
       return [
-        `<p><strong>Trello due date changed</strong></p>`,
-        `<p>${cardLabel} was updated by ${escapeHtml(actorName)}.</p>`,
-        `<p>Current due date: ${escapeHtml(dueDate)}</p>`,
+        `<p><strong>📅 Trello due date changed</strong></p>`,
+        `<p>${cardLabel} was updated by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>.</p>`,
+        `<p>Due date: ${dueLine}</p>`,
       ].join("");
     }
     case "card_attachment_added": {
       const attachmentName =
         normalizeText(data && data.attachment && (data.attachment.name || data.attachment.url)) || "an attachment";
       return [
-        `<p><strong>Trello attachment added</strong></p>`,
-        `<p>${escapeHtml(actorName)} attached ${escapeHtml(attachmentName)} to ${cardLabel}.</p>`,
+        `<p><strong>📎 Trello attachment added</strong></p>`,
+        `<p><strong style="color:#2980b9;">${escapeHtml(actorName)}</strong> attached <strong style="color:#16a085;">${escapeHtml(attachmentName)}</strong> to ${cardLabel}.</p>`,
       ].join("");
     }
     case "card_archived":
       return [
-        `<p><strong>Trello card archived</strong></p>`,
-        `<p>${cardLabel} was archived by ${escapeHtml(actorName)}.</p>`,
+        `<p><strong>🗄️ Trello card archived</strong></p>`,
+        `<p>${cardLabel} was <strong style="color:#c0392b;">archived</strong> by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>.</p>`,
       ].join("");
     default:
       return "";

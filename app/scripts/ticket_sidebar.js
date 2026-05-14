@@ -585,6 +585,11 @@ function normalizeLabels(value) {
 }
 
 function normalizeLabelObject(label) {
+  if (typeof label === "string") {
+    const text = normalizeText(label);
+    return text ? { name: text, color: "" } : null;
+  }
+
   const name = normalizeText(label && (label.name || label.label || label.title));
   const color = normalizeText(label && label.color).toLowerCase();
 
@@ -601,17 +606,36 @@ function normalizeLabelObject(label) {
 function renderLabelChip(label) {
   const textColor = getTrelloColorHex(label.color);
   const background = getTrelloColorTint(label.color);
+  const swatchColor = getTrelloColorActual(label.color);
 
   return `
     <span class="label-chip" style="background:${escapeAttribute(background)}; color:${escapeAttribute(textColor)};">
-      <span class="label-chip-dot"></span>
+      <span class="label-chip-dot" style="background:${escapeAttribute(swatchColor)};"></span>
       ${escapeHtml(label.name)}
     </span>
   `;
 }
 
+function getTrelloColorActual(color) {
+  const palette = {
+    green: "#61bd4f", yellow: "#f2d600", orange: "#ff9f1a", red: "#eb5a46",
+    purple: "#c377e0", blue: "#0079bf", sky: "#00c2e0", lime: "#51e898",
+    pink: "#ff78cb", black: "#344563",
+    green_dark: "#519839", yellow_dark: "#d9b51c", orange_dark: "#d17711",
+    red_dark: "#b04632", purple_dark: "#89609e", blue_dark: "#055a8c",
+    sky_dark: "#0098b7", lime_dark: "#4bbf6b", pink_dark: "#e06ba2",
+    black_dark: "#1d2d44",
+    green_light: "#b7ddb0", yellow_light: "#f5ea92", orange_light: "#fad29c",
+    red_light: "#efb3ab", purple_light: "#dfc0eb", blue_light: "#8bbdd9",
+    sky_light: "#8fdfeb", lime_light: "#b3f1d0", pink_light: "#f9c2e4",
+    black_light: "#b6bfcb",
+  };
+  return palette[normalizeText(color).toLowerCase()] || "#c2cfe0";
+}
+
 function getTrelloColorHex(color) {
   const palette = {
+    // Standard
     green: "#2f7d32",
     yellow: "#8a6d00",
     orange: "#b75a00",
@@ -622,6 +646,28 @@ function getTrelloColorHex(color) {
     lime: "#1b7f56",
     pink: "#b23b79",
     black: "#344563",
+    // Dark
+    green_dark: "#1a4f1e",
+    yellow_dark: "#5c4200",
+    orange_dark: "#7a3d00",
+    red_dark: "#7a1e0c",
+    purple_dark: "#4a1f6b",
+    blue_dark: "#013666",
+    sky_dark: "#005566",
+    lime_dark: "#1a5c2e",
+    pink_dark: "#7a1f4e",
+    black_dark: "#0d1826",
+    // Light
+    green_light: "#2d6e2a",
+    yellow_light: "#7a5f00",
+    orange_light: "#8c5000",
+    red_light: "#8c2f28",
+    purple_light: "#5c3070",
+    blue_light: "#1e4f7c",
+    sky_light: "#1a6070",
+    lime_light: "#1e6040",
+    pink_light: "#7c2a5c",
+    black_light: "#3d4e5c",
   };
 
   return palette[normalizeText(color).toLowerCase()] || "#39556f";
@@ -629,6 +675,7 @@ function getTrelloColorHex(color) {
 
 function getTrelloColorTint(color) {
   const palette = {
+    // Standard
     green: "#e9f7e7",
     yellow: "#fff6d9",
     orange: "#fff0df",
@@ -639,18 +686,54 @@ function getTrelloColorTint(color) {
     lime: "#e8fbf1",
     pink: "#fdebf4",
     black: "#ebedf0",
+    // Dark
+    green_dark: "#dff0db",
+    yellow_dark: "#fdf3c5",
+    orange_dark: "#ffe8c8",
+    red_dark: "#fad9d7",
+    purple_dark: "#ecdff5",
+    blue_dark: "#d0e8f6",
+    sky_dark: "#d6f4fa",
+    lime_dark: "#d5f5e3",
+    pink_dark: "#f9ddf0",
+    black_dark: "#d4d8e0",
+    // Light
+    green_light: "#edf6ec",
+    yellow_light: "#fefcd4",
+    orange_light: "#fef3de",
+    red_light: "#fdeeed",
+    purple_light: "#f4edfc",
+    blue_light: "#e8f2fb",
+    sky_light: "#e5f8fb",
+    lime_light: "#e9fbf2",
+    pink_light: "#fdecf6",
+    black_light: "#eceef0",
   };
 
   return palette[normalizeText(color).toLowerCase()] || "#eaf0f7";
 }
 
 function getTrelloColorLabel(color) {
-  const normalized = normalizeText(color);
+  const normalized = normalizeText(color).toLowerCase();
   if (!normalized) {
     return "Trello label";
   }
 
-  return `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)} label`;
+  const names = {
+    green: "Green", yellow: "Yellow", orange: "Orange", red: "Red",
+    purple: "Purple", blue: "Blue", sky: "Sky", lime: "Lime",
+    pink: "Pink", black: "Black",
+    green_dark: "Dark Green", yellow_dark: "Dark Yellow", orange_dark: "Dark Orange",
+    red_dark: "Dark Red", purple_dark: "Dark Purple", blue_dark: "Dark Blue",
+    sky_dark: "Dark Sky", lime_dark: "Dark Lime", pink_dark: "Dark Pink",
+    black_dark: "Dark Black",
+    green_light: "Light Green", yellow_light: "Light Yellow", orange_light: "Light Orange",
+    red_light: "Light Red", purple_light: "Light Purple", blue_light: "Light Blue",
+    sky_light: "Light Sky", lime_light: "Light Lime", pink_light: "Light Pink",
+    black_light: "Light Black",
+  };
+
+  return names[normalized] ? `${names[normalized]} label` : `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)} label`;
 }
 
 function escapeHtml(value) {

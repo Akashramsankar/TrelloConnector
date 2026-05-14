@@ -101,7 +101,11 @@ function bindRefs() {
   refs.taskDescription = document.getElementById("taskDescription");
   refs.dueDateInput = document.getElementById("dueDateInput");
   refs.memberSelect = document.getElementById("memberSelect");
-  refs.labelSelect = document.getElementById("labelSelect");
+  refs.labelPicker = document.getElementById("labelPicker");
+  refs.labelPickerBtn = document.getElementById("labelPickerBtn");
+  refs.labelPickerSwatch = document.getElementById("labelPickerSwatch");
+  refs.labelPickerText = document.getElementById("labelPickerText");
+  refs.labelPickerDropdown = document.getElementById("labelPickerDropdown");
   refs.taskSelect = document.getElementById("taskSelect");
   refs.boardSelect = document.getElementById("boardSelect");
   refs.listSelect = document.getElementById("listSelect");
@@ -132,8 +136,15 @@ function bindEvents() {
   refs.memberSelect.addEventListener("change", (event) => {
     state.form.memberIds = event.target.value ? [event.target.value] : [];
   });
-  refs.labelSelect.addEventListener("change", (event) => {
-    state.form.labelIds = event.target.value ? [event.target.value] : [];
+  refs.labelPickerBtn.addEventListener("click", () => {
+    if (!refs.labelPickerBtn.disabled) {
+      toggleLabelPicker();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (refs.labelPicker && !refs.labelPicker.contains(event.target)) {
+      closeLabelPicker();
+    }
   });
   refs.taskSelect.addEventListener("change", (event) => {
     state.form.taskId = event.target.value;
@@ -175,14 +186,7 @@ function render() {
     state.form.memberIds[0] || "",
     state.form.boardId ? "Select a member" : "Choose a board first"
   );
-  refs.labelSelect.innerHTML = buildSelectOptions(
-    getLabelsForCurrentBoard().map((label) => ({
-      id: label.id,
-      name: formatLabelOption(label),
-    })),
-    state.form.labelIds[0] || "",
-    state.form.boardId ? "Select a label" : "Choose a board first"
-  );
+  renderLabelPicker(disableForm);
   refs.boardSelect.innerHTML = buildSelectOptions(
     state.boards,
     state.form.boardId,
@@ -206,7 +210,6 @@ function render() {
   refs.taskDescription.disabled = disableForm;
   refs.dueDateInput.disabled = disableForm;
   refs.memberSelect.disabled = disableForm || !state.form.boardId;
-  refs.labelSelect.disabled = disableForm || !state.form.boardId;
   refs.taskSelect.disabled = disableForm || !state.form.listId;
   refs.boardSelect.disabled = disableForm;
   refs.listSelect.disabled = disableForm || !state.form.boardId;
@@ -602,15 +605,140 @@ function buildMultiSelectOptions(items, selectedId, placeholder) {
   return buildSelectOptions(items, selectedId, placeholder);
 }
 
-function formatLabelOption(label) {
-  const name = normalizeText(label && label.name);
-  const color = normalizeText(label && label.color);
+function renderLabelPicker(disableForm) {
+  closeLabelPicker();
+  const labels = getLabelsForCurrentBoard();
+  const selectedId = state.form.labelIds[0] || "";
+  const placeholder = state.form.boardId ? "Select a label" : "Choose a board first";
+  const isDisabled = disableForm || !state.form.boardId;
 
-  if (name && color) {
-    return `${name} (${color})`;
+  refs.labelPickerBtn.disabled = isDisabled;
+
+  const selectedLabel = labels.find((label) => label.id === selectedId);
+  if (selectedLabel) {
+    const hex = getTrelloActualColor(normalizeText(selectedLabel.color).toLowerCase());
+    refs.labelPickerSwatch.style.background = hex || "#c2cfe0";
+    refs.labelPickerText.textContent = formatLabelOption(selectedLabel);
+  } else {
+    refs.labelPickerSwatch.style.background = "transparent";
+    refs.labelPickerText.textContent = placeholder;
   }
 
-  return name || color || "Unnamed label";
+  const noneHtml = `
+    <button type="button" class="label-picker-option${!selectedId ? " is-selected" : ""}" data-value="">
+      <span class="label-picker-option-swatch" style="background: #e5e9ef;"></span>
+      <span>None</span>
+    </button>
+  `;
+  const optionsHtml = labels.map((label) => {
+    const id = normalizeText(label && label.id);
+    const name = formatLabelOption(label);
+    const hex = getTrelloActualColor(normalizeText(label && label.color).toLowerCase()) || "#c2cfe0";
+    const isSelected = id === selectedId;
+    return `
+      <button type="button" class="label-picker-option${isSelected ? " is-selected" : ""}" data-value="${escapeAttribute(id)}">
+        <span class="label-picker-option-swatch" style="background: ${escapeAttribute(hex)};"></span>
+        <span>${escapeHtml(name)}</span>
+      </button>
+    `;
+  }).join("");
+
+  refs.labelPickerDropdown.innerHTML = noneHtml + optionsHtml;
+
+  refs.labelPickerDropdown.querySelectorAll(".label-picker-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const value = btn.getAttribute("data-value");
+      state.form.labelIds = value ? [value] : [];
+      closeLabelPicker();
+      render();
+    });
+  });
+}
+
+function toggleLabelPicker() {
+  if (refs.labelPickerDropdown.classList.contains("hidden")) {
+    refs.labelPickerDropdown.classList.remove("hidden");
+    refs.labelPicker.classList.add("is-open");
+  } else {
+    closeLabelPicker();
+  }
+}
+
+function closeLabelPicker() {
+  if (refs.labelPickerDropdown) {
+    refs.labelPickerDropdown.classList.add("hidden");
+  }
+  if (refs.labelPicker) {
+    refs.labelPicker.classList.remove("is-open");
+  }
+}
+
+function getTrelloActualColor(color) {
+  const palette = {
+    // Standard
+    green: "#61bd4f",
+    yellow: "#f2d600",
+    orange: "#ff9f1a",
+    red: "#eb5a46",
+    purple: "#c377e0",
+    blue: "#0079bf",
+    sky: "#00c2e0",
+    lime: "#51e898",
+    pink: "#ff78cb",
+    black: "#344563",
+    // Dark
+    green_dark: "#519839",
+    yellow_dark: "#d9b51c",
+    orange_dark: "#d17711",
+    red_dark: "#b04632",
+    purple_dark: "#89609e",
+    blue_dark: "#055a8c",
+    sky_dark: "#0098b7",
+    lime_dark: "#4bbf6b",
+    pink_dark: "#e06ba2",
+    black_dark: "#1d2d44",
+    // Light
+    green_light: "#b7ddb0",
+    yellow_light: "#f5ea92",
+    orange_light: "#fad29c",
+    red_light: "#efb3ab",
+    purple_light: "#dfc0eb",
+    blue_light: "#8bbdd9",
+    sky_light: "#8fdfeb",
+    lime_light: "#b3f1d0",
+    pink_light: "#f9c2e4",
+    black_light: "#b6bfcb",
+  };
+  return palette[normalizeText(color).toLowerCase()] || "";
+}
+
+function formatLabelOption(label) {
+  const name = normalizeText(label && label.name);
+  const color = normalizeText(label && label.color).toLowerCase();
+  const colorName = formatTrelloColorName(color);
+
+  if (name && colorName) {
+    return `${name} (${colorName})`;
+  }
+
+  return name || colorName || "Unnamed label";
+}
+
+function formatTrelloColorName(color) {
+  const names = {
+    green: "Green", yellow: "Yellow", orange: "Orange", red: "Red",
+    purple: "Purple", blue: "Blue", sky: "Sky", lime: "Lime",
+    pink: "Pink", black: "Black",
+    green_dark: "Dark Green", yellow_dark: "Dark Yellow", orange_dark: "Dark Orange",
+    red_dark: "Dark Red", purple_dark: "Dark Purple", blue_dark: "Dark Blue",
+    sky_dark: "Dark Sky", lime_dark: "Dark Lime", pink_dark: "Dark Pink",
+    black_dark: "Dark Black",
+    green_light: "Light Green", yellow_light: "Light Yellow", orange_light: "Light Orange",
+    red_light: "Light Red", purple_light: "Light Purple", blue_light: "Light Blue",
+    sky_light: "Light Sky", lime_light: "Light Lime", pink_light: "Light Pink",
+    black_light: "Light Black",
+  };
+  return names[color] || (color ? `${color.charAt(0).toUpperCase()}${color.slice(1)}` : "");
 }
 
 function buildTicketSummary() {
