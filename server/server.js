@@ -2240,7 +2240,7 @@ async function syncCommentToStoredCards(ticketId, commentText, failureMessage, t
   return nextTasks;
 }
 
-function formatDateTime(value) {
+function formatDueDateDisplay(value) {
   const normalized = normalizeText(value);
   if (!normalized) {
     return "";
@@ -2251,7 +2251,24 @@ function formatDateTime(value) {
     return normalized;
   }
 
-  return parsed.toISOString().replace(".000Z", "Z");
+  const dateStr = parsed.toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+  const hours = parsed.getHours();
+  const minutes = parsed.getMinutes();
+  if (hours === 0 && minutes === 0) {
+    return dateStr;
+  }
+
+  const period = hours >= 12 ? "PM" : "AM";
+  const h = hours % 12 || 12;
+  const m = String(minutes).padStart(2, "0");
+
+  return `${dateStr} at ${h}:${m} ${period}`;
 }
 
 function buildTrelloCardAnchor(taskRecord, fallbackName) {
@@ -2483,10 +2500,10 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
     }
     case "card_due_date_updated": {
       const oldDueRaw = data && data.old && Object.prototype.hasOwnProperty.call(data.old, "due") ? data.old.due : undefined;
-      const oldDue = oldDueRaw !== undefined ? (formatDateTime(oldDueRaw) || "No due date") : null;
+      const oldDue = oldDueRaw !== undefined ? (formatDueDateDisplay(oldDueRaw) || "No due date") : null;
       const newDue =
-        formatDateTime(data && data.card && data.card.due) ||
-        formatDateTime(taskRecord && taskRecord.due_date) ||
+        formatDueDateDisplay(data && data.card && data.card.due) ||
+        formatDueDateDisplay(taskRecord && taskRecord.due_date) ||
         "No due date";
 
       const dueLine = oldDue !== null
