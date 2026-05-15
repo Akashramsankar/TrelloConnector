@@ -10,6 +10,7 @@ const TRELLO_CARD_SUPPRESS_PREFIX = "trello_card_suppress_v1:";
 const TRELLO_APP_KEY = "81c7dea8b018a4a14f3275147eabd758";
 const CLICKUP_PAGE_SIZE = 100;
 const DASHBOARD_RECENT_LIMIT = 25;
+const DASHBOARD_STALE_DAYS = 14;
 const SYNC_SUPPRESS_WINDOW_MS = 45000;
 const CLICKUP_COMMENT_REVERSE_EVENTS = new Set([
   "taskCommentPosted",
@@ -400,6 +401,78 @@ function buildDashboardTicketEntry(ticketId, tasks) {
     last_activity_at: normalizeText(latestTask.last_synced_at || latestTask.linked_at),
     has_sync_error: syncErrors.length > 0,
     sync_error: syncErrors[0] || "",
+  };
+}
+
+function buildDashboardInsights(linkedTickets) {
+  const tickets = Array.isArray(linkedTickets) ? linkedTickets : [];
+  const now = Date.now();
+  const staleMs = DASHBOARD_STALE_DAYS * 24 * 60 * 60 * 1000;
+
+  let healthyTickets = 0;
+  let needsAttentionTickets = 0;
+  let staleTickets = 0;
+  const boardMap = {};
+  const listMap = {};
+  const multiCardTickets = [];
+
+  tickets.forEach(function (ticket) {
+    if (ticket.has_sync_error) {
+      needsAttentionTickets += 1;
+    } else {
+      const lastActivity = new Date(normalizeText(ticket.last_activity_at) || 0).getTime();
+      if (!lastActivity || now - lastActivity > staleMs) {
+        staleTickets += 1;
+      } else {
+        healthyTickets += 1;
+      }
+    }
+
+    const board = normalizeText(ticket.workspace_name) || "Unknown Board";
+    if (!boardMap[board]) {
+      boardMap[board] = { ticket_count: 0, card_count: 0 };
+    }
+    boardMap[board].ticket_count += 1;
+    boardMap[board].card_count += Number(ticket.task_count) || 0;
+
+    const list = normalizeText(ticket.list_name) || "Unknown List";
+    listMap[list] = (listMap[list] || 0) + (Number(ticket.task_count) || 0);
+
+    if (Number(ticket.task_count) >= 2) {
+      multiCardTickets.push({
+        ticket_id: normalizeText(ticket.ticket_id),
+        task_count: Number(ticket.task_count),
+      });
+    }
+  });
+
+  const board_distribution = Object.keys(boardMap)
+    .map(function (board) {
+      return { board: board, ticket_count: boardMap[board].ticket_count, card_count: boardMap[board].card_count };
+    })
+    .sort(function (a, b) { return b.card_count - a.card_count; })
+    .slice(0, 5);
+
+  const list_distribution = Object.keys(listMap)
+    .map(function (list) { return { list: list, count: listMap[list] }; })
+    .sort(function (a, b) { return b.count - a.count; })
+    .slice(0, 5);
+
+  multiCardTickets.sort(function (a, b) { return b.task_count - a.task_count; });
+
+  return {
+    sync_health: {
+      healthy_tickets: healthyTickets,
+      needs_attention_tickets: needsAttentionTickets,
+      stale_tickets: staleTickets,
+      stale_after_days: DASHBOARD_STALE_DAYS,
+    },
+    board_distribution: board_distribution,
+    list_distribution: list_distribution,
+    multi_card_tickets: {
+      ticket_count: multiCardTickets.length,
+      top_tickets: multiCardTickets.slice(0, 5),
+    },
   };
 }
 
@@ -3038,9 +3111,11 @@ exports = {
     try {
       const summary = await readDashboardSummary();
       const linked_tickets = sortDashboardTickets(await readDashboardTickets());
+      const insights = buildDashboardInsights(linked_tickets);
 
       return buildSuccess({
         summary,
+        insights,
         linked_tickets,
       });
     } catch (error) {

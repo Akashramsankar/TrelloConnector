@@ -174,6 +174,83 @@
       line-height: 1.4;
     }
 
+    .metric-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-heading h2 {
+      margin: 0;
+    }
+
+    .info-btn {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid #b8c6d6;
+      border-radius: 50%;
+      background: #ffffff;
+      color: var(--info);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .info-btn::before,
+    .info-btn::after {
+      position: absolute;
+      left: 50%;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 4px);
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+
+    .info-btn::before {
+      content: "";
+      bottom: calc(100% + 5px);
+      border: 6px solid transparent;
+      border-top-color: var(--text);
+    }
+
+    .info-btn::after {
+      content: attr(data-info-title) "\A" attr(data-info-body);
+      bottom: calc(100% + 16px);
+      width: 280px;
+      max-width: min(78vw, 320px);
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--text);
+      color: #ffffff;
+      box-shadow: 0 12px 28px rgba(18, 52, 77, 0.2);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.5;
+      text-align: left;
+      white-space: pre-line;
+    }
+
+    .info-btn:hover,
+    .info-btn:focus-visible {
+      border-color: var(--info);
+      background: #f0f7ff;
+      outline: none;
+    }
+
+    .info-btn:hover::before,
+    .info-btn:hover::after,
+    .info-btn:focus-visible::before,
+    .info-btn:focus-visible::after {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
     .card-copy,
     .table-copy {
       margin: 6px 0 0;
@@ -195,6 +272,193 @@
       font-size: 12px;
       line-height: 1.6;
     }
+
+    /* ── Insights ── */
+
+    .insights-title {
+      margin: 4px 2px 0;
+      font-size: 18px;
+      line-height: 1.4;
+    }
+
+    .insight-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .chart-card {
+      min-height: 200px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .chart-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .chart-head h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .kpi-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .kpi-pill {
+      min-width: 80px;
+      padding: 8px 10px;
+      border: 1px solid #ecf0f5;
+      border-radius: 8px;
+      background: var(--surface-soft);
+    }
+
+    .kpi-value {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .kpi-label {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .chart-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 100px minmax(0, 1fr) 36px;
+      gap: 10px;
+      align-items: center;
+      min-height: 26px;
+    }
+
+    .bar-label,
+    .bar-value {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .bar-value {
+      text-align: right;
+    }
+
+    .bar-track {
+      position: relative;
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #ecf0f5;
+    }
+
+    .bar-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      background: var(--primary);
+    }
+
+    .bar-fill-secondary {
+      background: #0b7a5c;
+    }
+
+    .bar-fill-muted {
+      background: #95a3b7;
+    }
+
+    .donut-wrap {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    .donut {
+      width: 112px;
+      height: 112px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: conic-gradient(var(--success) 0 100%);
+    }
+
+    .donut-value {
+      width: 72px;
+      height: 72px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffffff;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend-item strong {
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .legend-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-empty {
+      min-height: 90px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed #c6d1dd;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      background: var(--surface-soft);
+    }
+
+    /* ── Table ── */
 
     .details-grid {
       display: grid;
@@ -274,6 +538,25 @@
       text-decoration: underline;
     }
 
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+
+    .badge-success {
+      background: #edf9f1;
+      color: var(--success);
+    }
+
+    .badge-danger {
+      background: #fff1ef;
+      color: var(--danger);
+    }
+
     .empty-state {
       padding: 22px;
       border: 1px dashed #c6d1dd;
@@ -294,7 +577,12 @@
       }
 
       .grid,
+      .insight-layout,
       .details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .donut-wrap {
         grid-template-columns: 1fr;
       }
 
@@ -329,7 +617,7 @@
       <p class="eyebrow">Trello Connector</p>
       <h1>Connector Dashboard</h1>
       <p>
-        View the current connection setup, sync preferences, and the most recent linked Trello cards for this Freshdesk app.
+        View the current connection setup, sync preferences, and the most recent linked Trello cards for this Freshdesk account.
       </p>
       <div class="hero-actions">
         <button id="refreshBtn" type="button" class="btn btn-primary">Refresh</button>
@@ -341,16 +629,96 @@
 
     <section class="grid">
       <article class="card">
-        <h2>Linked Tickets</h2>
+        <div class="metric-heading">
+          <h2>Linked Tickets</h2>
+          <button type="button" class="info-btn" data-info-title="Linked Tickets" data-info-body="Freshdesk tickets that currently have at least one Trello card linked to them." aria-label="Explain Linked Tickets">i</button>
+        </div>
         <p class="card-copy">Tickets with at least one linked Trello card.</p>
-        <div id="linkedTicketsValue" class="metric-value">0</div>
+        <div id="linkedTicketsValue" class="metric-value">-</div>
         <div class="metric-caption">Updated from app link and unlink activity.</div>
       </article>
       <article class="card">
-        <h2>Linked Cards</h2>
+        <div class="metric-heading">
+          <h2>Linked Cards</h2>
+          <button type="button" class="info-btn" data-info-title="Linked Cards" data-info-body="The total number of Trello cards currently linked across all Freshdesk tickets. Includes cards created from Freshdesk and cards manually linked." aria-label="Explain Linked Cards">i</button>
+        </div>
         <p class="card-copy">Total Trello cards currently linked to tickets.</p>
-        <div id="linkedTasksValue" class="metric-value">0</div>
+        <div id="linkedTasksValue" class="metric-value">-</div>
         <div class="metric-caption">Includes cards created from Freshdesk and manually linked cards.</div>
+      </article>
+    </section>
+
+    <h2 class="insights-title">Insights</h2>
+
+    <section class="insight-layout">
+      <article class="chart-card">
+        <div class="chart-head">
+          <div class="metric-heading">
+            <h2>Sync Health</h2>
+            <button type="button" class="info-btn" data-info-title="Sync Health" data-info-body="Healthy: no sync errors and activity within 14 days. Attention: at least one card has a sync error. Stale: no sync errors but no activity for 14 or more days." aria-label="Explain Sync Health">i</button>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <div id="healthDonut" class="donut">
+            <span id="needsAttentionValue" class="donut-value">-</span>
+          </div>
+          <div class="legend">
+            <div class="legend-item">
+              <span class="legend-left"><span class="legend-dot"></span>Healthy</span>
+              <strong id="healthyTicketsValue">-</strong>
+            </div>
+            <div class="legend-item">
+              <span class="legend-left"><span class="legend-dot" style="background: var(--danger);"></span>Attention</span>
+              <strong id="attentionTicketsValue">-</strong>
+            </div>
+            <div class="legend-item">
+              <span class="legend-left"><span class="legend-dot" style="background: #95a3b7;"></span>Stale</span>
+              <strong id="staleTicketsValue">-</strong>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="chart-card">
+        <div class="chart-head">
+          <div class="metric-heading">
+            <h2>Board Distribution</h2>
+            <button type="button" class="info-btn" data-info-title="Board Distribution" data-info-body="Shows which Trello boards have the most linked cards across all tickets. Useful for spotting which boards are most actively used with Freshdesk." aria-label="Explain Board Distribution">i</button>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-pill">
+              <span id="boardCountValue" class="kpi-value">-</span>
+              <span class="kpi-label">Boards in use</span>
+            </div>
+          </div>
+        </div>
+        <div id="boardDistributionBars" class="chart-bars"></div>
+      </article>
+
+      <article class="chart-card">
+        <div class="chart-head">
+          <div class="metric-heading">
+            <h2>Multi-Card Tickets</h2>
+            <button type="button" class="info-btn" data-info-title="Multi-Card Tickets" data-info-body="Freshdesk tickets that have 2 or more Trello cards linked to them. Useful for spotting tickets that have broader work spread across multiple cards." aria-label="Explain Multi-Card Tickets">i</button>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-pill">
+              <span id="multiCardTicketsValue" class="kpi-value">-</span>
+              <span class="kpi-label">Tickets with 2+ cards</span>
+            </div>
+          </div>
+        </div>
+        <div id="multiCardBars" class="chart-bars"></div>
+      </article>
+
+      <article class="chart-card">
+        <div class="chart-head">
+          <div class="metric-heading">
+            <h2>List Distribution</h2>
+            <button type="button" class="info-btn" data-info-title="List Distribution" data-info-body="Shows which Trello lists hold the most linked cards. Helps teams understand which workflow stage most linked work sits in." aria-label="Explain List Distribution">i</button>
+          </div>
+        </div>
+        <div id="listDistributionBars" class="chart-bars"></div>
       </article>
     </section>
 
