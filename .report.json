@@ -397,107 +397,107 @@
     },
     {
       "severity": 1,
-      "value": "server/server.js::2285: Function 'buildTrelloTicketLinkedNoteBody' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::2276: Function 'buildTrelloTicketLinkedNoteBody' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2302: Function 'buildForwardComment' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::2293: Function 'buildForwardComment' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2349: Function 'getTrelloWebhookCardId' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::2340: Function 'getTrelloWebhookCardId' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2377: Function 'getTrelloWebhookEventKey' has a complexity of 30. Maximum allowed is 7.",
+      "value": "server/server.js::2368: Function 'getTrelloWebhookEventKey' has a complexity of 30. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2440: Function 'buildTrelloWebhookNoteBody' has a complexity of 64. Maximum allowed is 7.",
+      "value": "server/server.js::2431: Function 'buildTrelloWebhookNoteBody' has a complexity of 64. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2537: Function 'buildTrelloTaskFromWebhookPayload' has a complexity of 64. Maximum allowed is 7.",
+      "value": "server/server.js::2528: Function 'buildTrelloTaskFromWebhookPayload' has a complexity of 64. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2594: Async function 'applyLinkedCardNotifications' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::2585: Async function 'applyLinkedCardNotifications' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2630: Function 'getClickupCommentFromEvent' has a complexity of 20. Maximum allowed is 7.",
+      "value": "server/server.js::2621: Function 'getClickupCommentFromEvent' has a complexity of 20. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2665: Function 'summarizeClickupExternalPayload' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::2656: Function 'summarizeClickupExternalPayload' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2705: Async function 'syncClickupTaskToFreshdeskTickets' has a complexity of 16. Maximum allowed is 7.",
+      "value": "server/server.js::2696: Async function 'syncClickupTaskToFreshdeskTickets' has a complexity of 16. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2852: Async function 'syncTrelloCardToFreshdeskTickets' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::2843: Async function 'syncTrelloCardToFreshdeskTickets' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2945: Async method 'afterAppUpdate' has a complexity of 11. Maximum allowed is 7.",
+      "value": "server/server.js::2936: Async method 'afterAppUpdate' has a complexity of 11. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3004: Async method 'onExternalEvent' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::2995: Async method 'onExternalEvent' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3086: Async method 'handleConversationCreate' has a complexity of 18. Maximum allowed is 7.",
+      "value": "server/server.js::3077: Async method 'handleConversationCreate' has a complexity of 18. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3193: Async method 'getTrelloBoards' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::3184: Async method 'getTrelloBoards' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3302: Async method 'getTrelloLists' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::3293: Async method 'getTrelloLists' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3346: Async method 'getTrelloCards' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::3337: Async method 'getTrelloCards' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3401: Async method 'createTicketCard' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::3392: Async method 'createTicketCard' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3521: Async method 'linkTicketCard' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::3512: Async method 'linkTicketCard' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3672: Async method 'getClickupMembers' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::3663: Async method 'getClickupMembers' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3754: Async method 'createTicketTask' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::3745: Async method 'createTicketTask' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     }
   ],

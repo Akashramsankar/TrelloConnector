@@ -2246,29 +2246,20 @@ function formatDueDateDisplay(value) {
     return "";
   }
 
-  const parsed = new Date(normalized);
-  if (Number.isNaN(parsed.getTime())) {
+  const isoMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!isoMatch) {
     return normalized;
   }
 
-  const dateStr = parsed.toLocaleDateString("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const year = parseInt(isoMatch[1], 10);
+  const monthIndex = parseInt(isoMatch[2], 10) - 1;
+  const day = parseInt(isoMatch[3], 10);
 
-  const hours = parsed.getHours();
-  const minutes = parsed.getMinutes();
-  if (hours === 0 && minutes === 0) {
-    return dateStr;
-  }
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dow = dayNames[new Date(Date.UTC(year, monthIndex, day)).getUTCDay()];
 
-  const period = hours >= 12 ? "PM" : "AM";
-  const h = hours % 12 || 12;
-  const m = String(minutes).padStart(2, "0");
-
-  return `${dateStr} at ${h}:${m} ${period}`;
+  return `${dow}, ${monthNames[monthIndex]} ${day}, ${year}`;
 }
 
 function buildTrelloCardAnchor(taskRecord, fallbackName) {
