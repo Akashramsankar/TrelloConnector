@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trello Connected</title>
+  <style>
+    :root {
+      --text: #12344d;
+      --muted: #576c7d;
+      --success: #0a6a31;
+      --success-border: #9fd3ad;
+      --success-bg: #edf9f1;
+      --error: #b42318;
+      --error-border: #f0b3ac;
+      --error-bg: #fff1ef;
+      --surface: #ffffff;
+      --page: #f7f9fc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: var(--page);
+      color: var(--text);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 460px;
+      padding: 28px 24px;
+      border-radius: 12px;
+      border: 1px solid #d7dee7;
+      background: var(--surface);
+      box-shadow: 0 12px 32px rgba(18, 52, 77, 0.08);
+      text-align: center;
+    }
+
+    .status {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .status.success {
+      color: var(--success);
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+    }
+
+    .status.error {
+      color: var(--error);
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      line-height: 1.3;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div id="status" class="status">Working</div>
+    <h1 id="title">Finishing Trello connection...</h1>
+    <p id="message">This window will update once authorization is complete.</p>
+  </main>
+
+  <script>
+    (function () {
+      const statusEl = document.getElementById("status");
+      const titleEl = document.getElementById("title");
+      const messageEl = document.getElementById("message");
+      const queryParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const token = (hashParams.get("token") || "").trim();
+      const error = (hashParams.get("error") || "").trim();
+      const parentOrigin = resolveParentOrigin(queryParams.get("parent_origin"));
+
+      if (window.opener && !window.opener.closed && parentOrigin) {
+        window.opener.postMessage(
+          {
+            source: "trello-auth-callback",
+            token,
+            error,
+          },
+          parentOrigin
+        );
+      }
+
+      if (!parentOrigin) {
+        statusEl.textContent = "Action Needed";
+        statusEl.className = "status error";
+        titleEl.textContent = "Trello connection could not be completed";
+        messageEl.textContent = "The callback page is missing the Freshworks origin. Close this window and try again.";
+        return;
+      }
+
+      if (token) {
+        statusEl.textContent = "Success";
+        statusEl.className = "status success";
+        titleEl.textContent = "Trello connected successfully";
+        messageEl.textContent = "You can close this window and return to Freshdesk.";
+        return;
+      }
+
+      statusEl.textContent = "Action Needed";
+      statusEl.className = "status error";
+      titleEl.textContent = "Trello connection was not completed";
+      messageEl.textContent = error
+        ? "Authorization was cancelled or denied. You can close this window and try again."
+        : "No Trello token was returned. You can close this window and try again.";
+
+      function resolveParentOrigin(value) {
+        const normalized = String(value || "").trim();
+        if (!normalized) {
+          return "";
+        }
+
+        try {
+          return new URL(normalized).origin;
+        } catch (error) {
+          return "";
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

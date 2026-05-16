@@ -1,6 +1,8 @@
 const TRELLO_APP_KEY = "81c7dea8b018a4a14f3275147eabd758";
 const TRELLO_AUTH_POPUP_NAME = "trello-connector-auth";
 const TRELLO_AUTH_TIMEOUT_MS = 120000;
+const TRELLO_CALLBACK_PAGE_URL = "https://akashramsankar.github.io/TrelloConnector/trello_auth_complete.html";
+const TRELLO_CALLBACK_ORIGIN = new URL(TRELLO_CALLBACK_PAGE_URL).origin;
 const TRELLO_TO_FRESHDESK_EVENTS = [
   { key: "ticket_linked", label: "A ticket is connected to a Trello card" },
   { key: "card_moved", label: "A linked card is moved to another list" },
@@ -226,13 +228,19 @@ function getActiveFreshdeskAuth() {
 
 function applyTrelloAuthorizationLinks() {
   const trelloApiKey = getActiveTrelloApiKey();
-  const returnUrl = `${window.location.origin}/`;
+  const returnUrl = buildTrelloAuthReturnUrl();
   const authorizeUrl = trelloApiKey ? buildTrelloAuthorizeUrl(trelloApiKey, returnUrl) : "#";
 
   refs.connectTrelloBtn.href = authorizeUrl;
   refs.resetTrelloBtn.href = authorizeUrl;
   refs.connectTrelloBtn.target = TRELLO_AUTH_POPUP_NAME;
   refs.resetTrelloBtn.target = TRELLO_AUTH_POPUP_NAME;
+}
+
+function buildTrelloAuthReturnUrl() {
+  const callbackUrl = new URL(TRELLO_CALLBACK_PAGE_URL);
+  callbackUrl.searchParams.set("parent_origin", window.location.origin);
+  return callbackUrl.toString();
 }
 
 function maybeAutoOpenTrelloPopup() {
@@ -260,7 +268,7 @@ function maybeAutoOpenTrelloPopup() {
 
 function buildTrelloAuthorizeUrl(trelloApiKey, returnUrl) {
   const params = new URLSearchParams({
-    callback_method: "postMessage",
+    callback_method: "fragment",
     expiration: "never",
     key: trelloApiKey,
     name: "Freshdesk Trello Connector",
@@ -273,7 +281,15 @@ function buildTrelloAuthorizeUrl(trelloApiKey, returnUrl) {
 }
 
 async function handleTrelloAuthMessage(event) {
-  if (!event || event.origin !== "https://trello.com") {
+  const isTrelloMessage = event && event.origin === "https://trello.com";
+  const isHostedCallbackMessage =
+    event &&
+    event.origin === TRELLO_CALLBACK_ORIGIN &&
+    event.data &&
+    typeof event.data === "object" &&
+    event.data.source === "trello-auth-callback";
+
+  if (!isTrelloMessage && !isHostedCallbackMessage) {
     return;
   }
 
