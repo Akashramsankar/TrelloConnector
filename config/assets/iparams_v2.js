@@ -15,15 +15,15 @@ const TRELLO_TO_FRESHDESK_EVENTS = [
 ];
 const FRESHDESK_TO_TRELLO_EVENTS = [
   { key: "ticket_linked", label: "A ticket is connected to a Trello card" },
-  { key: "private_note_added", label: "An internal note is added to the ticket" },
-  { key: "public_note_added", label: "A visible note is added to the ticket" },
+  { key: "private_note_added", label: "A private note is added to the ticket" },
+  { key: "public_note_added", label: "A public note is added to the ticket" },
   { key: "agent_reply_added", label: "An agent reply is sent from the ticket" },
   { key: "ticket_forwarded", label: "The ticket is forwarded" },
 ];
 const FRESHDESK_ACTION_OPTIONS = [
   { value: "none", label: "Leave the ticket unchanged" },
-  { value: "private_note_notify", label: "Add an internal note and alert the assignee" },
-  { value: "public_note", label: "Add a customer-visible note on the ticket" },
+  { value: "private_note_notify", label: "Add a private note and alert the assignee" },
+  { value: "public_note", label: "Add a public note on the ticket" },
 ];
 const TRELLO_ACTION_OPTIONS = [
   { value: "none", label: "Do not post anything" },
