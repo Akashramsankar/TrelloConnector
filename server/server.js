@@ -2577,8 +2577,9 @@ function buildForwardComment(payload) {
     ) || "Freshdesk agent";
   const actorEmail = normalizeText(actor.email);
   const byLine = actorEmail && actorEmail !== actorName ? `${actorName} <${actorEmail}>` : actorName;
+  const recipientSentence = buildForwardRecipientSentence(payload);
 
-  return `[Freshdesk Forward] Ticket #${ticket.id}${ticket.subject ? ` - ${ticket.subject}` : ""}\nBy: ${byLine}\n\n${forwardText}`;
+  return `[Freshdesk Forward] Ticket #${ticket.id}${ticket.subject ? ` - ${ticket.subject}` : ""}\nBy: ${byLine}\n${recipientSentence}\n\n${forwardText}`;
 }
 
 function buildFreshdeskTicketLinkedComment(ticket) {
@@ -2592,6 +2593,83 @@ function buildFreshdeskTicketLinkedComment(ticket) {
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+function normalizeEmailRecipientList(value) {
+  if (!value) {
+    return [];
+  }
+
+  const values = Array.isArray(value) ? value : String(value).split(/[,\n;]+/);
+
+  return Array.from(
+    new Set(
+      values
+        .map((item) => {
+          if (item && typeof item === "object") {
+            return normalizeText(item.email || item.address || item.value || item.name);
+          }
+          return normalizeText(item).replace(/^["']|["']$/g, "");
+        })
+        .filter(Boolean)
+    )
+  );
+}
+
+function getFirstRecipientList(source, keys) {
+  if (!source || typeof source !== "object") {
+    return [];
+  }
+
+  for (let index = 0; index < keys.length; index += 1) {
+    const recipients = normalizeEmailRecipientList(source[keys[index]]);
+    if (recipients.length) {
+      return recipients;
+    }
+  }
+
+  return [];
+}
+
+function buildForwardRecipientSentence(payload) {
+  const conversation = normalizeEventConversation(payload);
+  const ticket = normalizeEventTicket(payload);
+  const data = payload && payload.data && typeof payload.data === "object" ? payload.data : {};
+
+  const sources = [
+    conversation,
+    conversation && conversation.forward,
+    conversation && conversation.forward_details,
+    data,
+    data.forward,
+    data.forward_details,
+    ticket,
+  ];
+
+  const toKeys = ["to", "to_email", "to_emails", "toEmail", "toEmails", "forward_to", "forwarded_to", "recipient", "recipients"];
+  const ccKeys = ["cc", "cc_email", "cc_emails", "ccEmail", "ccEmails", "forward_cc", "cc_recipients"];
+  const bccKeys = ["bcc", "bcc_email", "bcc_emails", "bccEmail", "bccEmails", "forward_bcc", "bcc_recipients"];
+
+  const to = sources.reduce((found, source) => found.length ? found : getFirstRecipientList(source, toKeys), []);
+  const cc = sources.reduce((found, source) => found.length ? found : getFirstRecipientList(source, ccKeys), []);
+  const bcc = sources.reduce((found, source) => found.length ? found : getFirstRecipientList(source, bccKeys), []);
+
+  if (!to.length && !cc.length && !bcc.length) {
+    return "Ticket has been forwarded.";
+  }
+
+  const details = [];
+  if (to.length) {
+    details.push(`to ${to.join(", ")}`);
+  }
+  if (cc.length) {
+    details.push(`CC: ${cc.join(", ")}`);
+  }
+  if (bcc.length) {
+    details.push(`BCC: ${bcc.join(", ")}`);
+  }
+
+  return `Ticket has been forwarded ${details.join("; ")}.`;
 }
 
 function getTrelloWebhookAction(payload) {
@@ -3371,20 +3449,6 @@ exports = {
         return;
       }
 
-      if (isPrivateConversation(conversation)) {
-        if (getFreshdeskToTrelloNotificationAction(settings, "private_note_added") !== "comment") {
-          return;
-        }
-
-        const privateNoteComment = buildPrivateNoteComment(payload);
-        if (!privateNoteComment) {
-          return;
-        }
-
-        await syncCommentToStoredCards(ticket.id, privateNoteComment, "Private note sync failed.");
-        return;
-      }
-
       if (isForwardConversation(payload)) {
         if (getFreshdeskToTrelloNotificationAction(settings, "ticket_forwarded") !== "comment") {
           return;
@@ -3396,6 +3460,20 @@ exports = {
         }
 
         await syncCommentToStoredCards(ticket.id, forwardComment, "Ticket forward sync failed.");
+        return;
+      }
+
+      if (isPrivateConversation(conversation)) {
+        if (getFreshdeskToTrelloNotificationAction(settings, "private_note_added") !== "comment") {
+          return;
+        }
+
+        const privateNoteComment = buildPrivateNoteComment(payload);
+        if (!privateNoteComment) {
+          return;
+        }
+
+        await syncCommentToStoredCards(ticket.id, privateNoteComment, "Private note sync failed.");
         return;
       }
 
