@@ -7,11 +7,13 @@ const TRELLO_WEBHOOK_STORE_KEY = "trello_webhooks_v1";
 const TRELLO_RUNTIME_SETTINGS_KEY = "trello_runtime_settings_v1";
 const TICKET_SUPPRESS_PREFIX = "clickup_ticket_suppress_v1:";
 const TRELLO_CARD_SUPPRESS_PREFIX = "trello_card_suppress_v1:";
+const TRELLO_LABEL_DEDUPE_PREFIX = "trello_label_change_dedupe_v1:";
 const TRELLO_APP_KEY = "81c7dea8b018a4a14f3275147eabd758";
 const CLICKUP_PAGE_SIZE = 100;
 const DASHBOARD_RECENT_LIMIT = 25;
 const DASHBOARD_STALE_DAYS = 14;
 const SYNC_SUPPRESS_WINDOW_MS = 45000;
+const TRELLO_LABEL_DEDUPE_WINDOW_MS = 30000;
 const CLICKUP_COMMENT_REVERSE_EVENTS = new Set([
   "taskCommentPosted",
   "taskCommentUpdated",
@@ -89,6 +91,10 @@ function buildTaskLinkKey(taskId) {
 
 function buildSuppressionKey(prefix, recordId) {
   return `${prefix}${normalizeText(recordId)}`;
+}
+
+function buildTrelloLabelDedupeKey(ticketId, cardId) {
+  return `${TRELLO_LABEL_DEDUPE_PREFIX}${normalizeText(ticketId)}:${normalizeText(cardId)}`;
 }
 
 async function readTicketLinks(ticketId) {
@@ -300,6 +306,43 @@ async function isSuppressed(prefix, recordId, eventTimestamp) {
     }
     throw error;
   }
+}
+
+async function isDuplicateTrelloLabelChange(ticketId, cardId, fingerprint) {
+  const normalizedTicketId = normalizeText(ticketId);
+  const normalizedCardId = normalizeText(cardId);
+  const normalizedFingerprint = normalizeText(fingerprint);
+
+  if (!normalizedTicketId || !normalizedCardId || !normalizedFingerprint) {
+    return false;
+  }
+
+  try {
+    const stored = await $db.get(buildTrelloLabelDedupeKey(normalizedTicketId, normalizedCardId));
+    return normalizeText(stored && stored.fingerprint) === normalizedFingerprint && Number(stored && stored.until) > Date.now();
+  } catch (error) {
+    if (error && error.status === 404) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function rememberTrelloLabelChange(ticketId, cardId, fingerprint) {
+  const normalizedTicketId = normalizeText(ticketId);
+  const normalizedCardId = normalizeText(cardId);
+  const normalizedFingerprint = normalizeText(fingerprint);
+
+  if (!normalizedTicketId || !normalizedCardId || !normalizedFingerprint) {
+    return;
+  }
+
+  await $db.set(buildTrelloLabelDedupeKey(normalizedTicketId, normalizedCardId), {
+    ticket_id: normalizedTicketId,
+    card_id: normalizedCardId,
+    fingerprint: normalizedFingerprint,
+    until: Date.now() + TRELLO_LABEL_DEDUPE_WINDOW_MS,
+  });
 }
 
 async function readDashboardSummary() {
@@ -2346,6 +2389,158 @@ function buildTrelloCardAnchor(taskRecord, fallbackName) {
   return `<a href="${escapeHtml(cardUrl)}" target="_blank" rel="noreferrer">${escapeHtml(cardName)}</a>`;
 }
 
+function getTrelloColorActual(color) {
+  const palette = {
+    green: "#61bd4f", yellow: "#f2d600", orange: "#ff9f1a", red: "#eb5a46",
+    purple: "#c377e0", blue: "#0079bf", sky: "#00c2e0", lime: "#51e898",
+    pink: "#ff78cb", black: "#344563",
+    green_dark: "#519839", yellow_dark: "#d9b51c", orange_dark: "#d17711",
+    red_dark: "#b04632", purple_dark: "#89609e", blue_dark: "#055a8c",
+    sky_dark: "#0098b7", lime_dark: "#4bbf6b", pink_dark: "#e06ba2",
+    black_dark: "#1d2d44",
+    green_light: "#b7ddb0", yellow_light: "#f5ea92", orange_light: "#fad29c",
+    red_light: "#efb3ab", purple_light: "#dfc0eb", blue_light: "#8bbdd9",
+    sky_light: "#8fdfeb", lime_light: "#b3f1d0", pink_light: "#f9c2e4",
+    black_light: "#b6bfcb",
+  };
+
+  return palette[normalizeText(color).toLowerCase()] || "#c2cfe0";
+}
+
+function getReadableTextColor(backgroundHex) {
+  const hex = normalizeText(backgroundHex).replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(hex)) {
+    return "#172b4d";
+  }
+
+  const red = parseInt(hex.slice(0, 2), 16);
+  const green = parseInt(hex.slice(2, 4), 16);
+  const blue = parseInt(hex.slice(4, 6), 16);
+  const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
+
+  return brightness > 145 ? "#172b4d" : "#ffffff";
+}
+
+function formatTrelloColorName(color) {
+  const normalized = normalizeText(color).toLowerCase();
+  const names = {
+    green: "Green", yellow: "Yellow", orange: "Orange", red: "Red",
+    purple: "Purple", blue: "Blue", sky: "Sky", lime: "Lime",
+    pink: "Pink", black: "Black",
+    green_dark: "Dark Green", yellow_dark: "Dark Yellow", orange_dark: "Dark Orange",
+    red_dark: "Dark Red", purple_dark: "Dark Purple", blue_dark: "Dark Blue",
+    sky_dark: "Dark Sky", lime_dark: "Dark Lime", pink_dark: "Dark Pink",
+    black_dark: "Dark Black",
+    green_light: "Light Green", yellow_light: "Light Yellow", orange_light: "Light Orange",
+    red_light: "Light Red", purple_light: "Light Purple", blue_light: "Light Blue",
+    sky_light: "Light Sky", lime_light: "Light Lime", pink_light: "Light Pink",
+    black_light: "Light Black",
+  };
+
+  return names[normalized] || (normalized ? `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}` : "");
+}
+
+function formatTrelloLabelDisplayName(label) {
+  const name = normalizeText(label && label.name);
+  const colorName = formatTrelloColorName(label && label.color);
+
+  return name || (colorName ? `${colorName} label` : "Unnamed label");
+}
+
+function labelsMatch(left, right) {
+  const leftId = normalizeText(left && left.id);
+  const rightId = normalizeText(right && right.id);
+
+  if (leftId && rightId) {
+    return leftId === rightId;
+  }
+
+  return (
+    normalizeText(left && left.name).toLowerCase() === normalizeText(right && right.name).toLowerCase() &&
+    normalizeText(left && left.color).toLowerCase() === normalizeText(right && right.color).toLowerCase()
+  );
+}
+
+function upsertTrelloLabel(labels, label) {
+  const normalizedLabel = normalizeTrelloLabels([label])[0];
+  if (!normalizedLabel) {
+    return normalizeTrelloLabels(labels);
+  }
+
+  const filtered = normalizeTrelloLabels(labels).filter((item) => !labelsMatch(item, normalizedLabel));
+  return filtered.concat(normalizedLabel);
+}
+
+function removeTrelloLabel(labels, label) {
+  const normalizedLabel = normalizeTrelloLabels([label])[0];
+  if (!normalizedLabel) {
+    return normalizeTrelloLabels(labels);
+  }
+
+  return normalizeTrelloLabels(labels).filter((item) => !labelsMatch(item, normalizedLabel));
+}
+
+function getTrelloLabelsFromWebhookPayload(payload, taskRecord) {
+  const action = getTrelloWebhookAction(payload) || {};
+  const external = extractExternalPayload(payload);
+  const data = action && action.data ? action.data : {};
+  const model = external && external.model ? external.model : {};
+  const modelLabels = normalizeTrelloLabels(model && model.labels);
+
+  if (Array.isArray(model && model.labels)) {
+    return modelLabels;
+  }
+
+  if (Array.isArray(data && data.card && data.card.labels)) {
+    return normalizeTrelloLabels(data.card.labels);
+  }
+
+  const storedLabels = normalizeTrelloLabels(taskRecord && taskRecord.labels);
+  const changedLabel = (data && data.label) || (action && action.label);
+  const actionType = normalizeText(action && action.type);
+
+  if (actionType === "addLabelToCard") {
+    return upsertTrelloLabel(storedLabels, changedLabel);
+  }
+
+  if (actionType === "removeLabelFromCard") {
+    return removeTrelloLabel(storedLabels, changedLabel);
+  }
+
+  return storedLabels;
+}
+
+function buildTrelloLabelFingerprint(labels) {
+  const normalizedLabels = normalizeTrelloLabels(labels);
+  if (!normalizedLabels.length) {
+    return "labels:none";
+  }
+
+  return normalizedLabels
+    .map((label) => [
+      normalizeText(label && label.id),
+      normalizeText(label && label.name).toLowerCase(),
+      normalizeText(label && label.color).toLowerCase(),
+    ].join(":"))
+    .sort()
+    .join("|");
+}
+
+function renderTrelloLabelBlocks(labels) {
+  const normalizedLabels = normalizeTrelloLabels(labels);
+  if (!normalizedLabels.length) {
+    return `<p><em>No labels are currently applied.</em></p>`;
+  }
+
+  const blocks = normalizedLabels.map((label) => {
+    const background = getTrelloColorActual(label && label.color);
+    const color = getReadableTextColor(background);
+    return `<span style="display:inline-block;min-width:72px;margin:4px 6px 0 0;padding:5px 8px;border-radius:4px;background:${background};color:${color};font-weight:600;">${escapeHtml(formatTrelloLabelDisplayName(label))}</span>`;
+  });
+
+  return `<div>${blocks.join("")}</div>`;
+}
+
 function buildTrelloTicketLinkedNoteBody(ticket, taskRecord) {
   const ticketId = normalizeText(ticket && ticket.id);
   const subject = normalizeText(ticket && ticket.subject);
@@ -2553,6 +2748,7 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
       ].join("");
     }
     case "card_labels_updated": {
+      const labels = getTrelloLabelsFromWebhookPayload(payload, taskRecord);
       const labelName =
         normalizeText(data && data.label && (data.label.name || data.label.color)) ||
         normalizeText(data && data.text);
@@ -2560,6 +2756,8 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
       return [
         `<p><strong>🏷️ Trello labels changed</strong></p>`,
         `<p>${cardLabel} had its labels updated by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>${labelName ? ` (<strong style="color:#8e44ad;">${escapeHtml(labelName)}</strong>)` : ""}.</p>`,
+        `<p><strong>Current labels:</strong></p>`,
+        renderTrelloLabelBlocks(labels),
       ].join("");
     }
     case "card_due_date_updated": {
@@ -2604,6 +2802,7 @@ function buildTrelloTaskFromWebhookPayload(taskRecord, payload, syncTimestamp, s
   const data = action && action.data ? action.data : {};
   const model = external && external.model ? external.model : {};
   const meta = buildTrelloTaskMetaFromStoredRecord(taskRecord);
+  const labels = getTrelloLabelsFromWebhookPayload(payload, taskRecord);
 
   const nextRecord = normalizeTrelloCardRecord(
     {
@@ -2629,10 +2828,11 @@ function buildTrelloTaskFromWebhookPayload(taskRecord, payload, syncTimestamp, s
         normalizeText((data && data.listAfter && data.listAfter.id) || (data && data.list && data.list.id)) ||
         normalizeText(model && model.idList) ||
         meta.list_id,
-      labels: Array.isArray(model && model.labels) ? model.labels : meta.labels,
+      labels,
     },
     {
       ...meta,
+      labels,
       workspace_id: normalizeText((data && data.board && data.board.id) || meta.workspace_id),
       workspace_name: normalizeText((data && data.board && data.board.name) || meta.workspace_name),
       list_id:
@@ -2954,10 +3154,19 @@ async function syncTrelloCardToFreshdeskTickets(cardId, settings, payload) {
     }
 
     const syncedCommentIds = getStoredTaskCommentIds(storedTask);
-    const isDuplicateComment = eventKey === "card_comment_added" && eventId && syncedCommentIds.includes(eventId);
+    const isDuplicateEvent = eventId && syncedCommentIds.includes(eventId);
     const syncErrors = [];
+    let isDuplicateLabelChange = false;
 
-    if (!isDuplicateComment) {
+    if (eventKey === "card_labels_updated") {
+      const labelFingerprint = buildTrelloLabelFingerprint(getTrelloLabelsFromWebhookPayload(payload, storedTask));
+      isDuplicateLabelChange = await isDuplicateTrelloLabelChange(ticketId, normalizedCardId, labelFingerprint);
+      if (!isDuplicateLabelChange) {
+        await rememberTrelloLabelChange(ticketId, normalizedCardId, labelFingerprint);
+      }
+    }
+
+    if (!isDuplicateEvent && !isDuplicateLabelChange) {
       try {
         const noteBody = buildTrelloWebhookNoteBody(eventKey, payload, storedTask);
         if (noteBody) {
