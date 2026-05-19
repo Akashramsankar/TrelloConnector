@@ -29,6 +29,8 @@ const TRELLO_ACTION_OPTIONS = [
   { value: "none", label: "Do not post anything" },
   { value: "comment", label: "Add a comment to the linked Trello card" },
 ];
+const DEFAULT_TRELLO_TO_FRESHDESK_ACTION = "private_note_notify";
+const DEFAULT_FRESHDESK_TO_TRELLO_ACTION = "comment";
 
 const state = {
   client: null,
@@ -523,9 +525,12 @@ function renderNotificationSettings() {
 }
 
 function buildNotificationRows(events, selections, options, group) {
+  const fallbackValue =
+    group === "trelloToFreshdesk" ? DEFAULT_TRELLO_TO_FRESHDESK_ACTION : DEFAULT_FRESHDESK_TO_TRELLO_ACTION;
+
   return events
     .map((event) => {
-      const value = selections && selections[event.key] ? selections[event.key] : options[0].value;
+      const value = selections && selections[event.key] ? selections[event.key] : fallbackValue;
       return `
         <div class="notification-row">
           <div class="notification-label">${escapeHtml(event.label)}</div>
@@ -576,7 +581,7 @@ function resolveTrelloToFreshdeskMode(configs) {
   if (["none", "private_note_notify", "public_note"].includes(mode)) {
     return mode;
   }
-  return "none";
+  return DEFAULT_TRELLO_TO_FRESHDESK_ACTION;
 }
 
 function resolveFreshdeskToTrelloMode(configs) {
@@ -584,7 +589,7 @@ function resolveFreshdeskToTrelloMode(configs) {
   if (["none", "comment"].includes(mode)) {
     return mode;
   }
-  return "none";
+  return DEFAULT_FRESHDESK_TO_TRELLO_ACTION;
 }
 
 function normalizeNotificationPreferences(value, events, fallbackValue) {
@@ -650,16 +655,22 @@ function postConfigs() {
     trello_member_url: state.connectedTrelloMember ? state.connectedTrelloMember.url : "",
     domain: normalizeDomain(refs.domain.value),
     api_key: getActiveFreshdeskAuth(),
-    trello_to_freshdesk_sync_mode: resolvePrimaryNotificationMode(state.notificationPreferences.trelloToFreshdesk),
-    freshdesk_to_trello_sync_mode: resolvePrimaryNotificationMode(state.notificationPreferences.freshdeskToTrello),
+    trello_to_freshdesk_sync_mode: resolvePrimaryNotificationMode(
+      state.notificationPreferences.trelloToFreshdesk,
+      DEFAULT_TRELLO_TO_FRESHDESK_ACTION
+    ),
+    freshdesk_to_trello_sync_mode: resolvePrimaryNotificationMode(
+      state.notificationPreferences.freshdeskToTrello,
+      DEFAULT_FRESHDESK_TO_TRELLO_ACTION
+    ),
     trello_to_freshdesk_notifications: state.notificationPreferences.trelloToFreshdesk,
     freshdesk_to_trello_notifications: state.notificationPreferences.freshdeskToTrello,
   };
 }
 
-function resolvePrimaryNotificationMode(group) {
+function resolvePrimaryNotificationMode(group, fallbackValue) {
   const values = Object.values(group || {}).filter(Boolean);
-  return values.length ? values[0] : "none";
+  return values.length ? values[0] : fallbackValue;
 }
 
 function getConfigs(configs) {
