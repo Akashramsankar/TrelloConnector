@@ -17,12 +17,12 @@
     },
     {
       "severity": 1,
-      "value": "app/scripts/app.js::798: Function 'parseInvokeResponse' has a complexity of 9. Maximum allowed is 7.",
+      "value": "app/scripts/app.js::814: Function 'parseInvokeResponse' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "app/scripts/app.js::822: Function 'resolveInvokeError' has a complexity of 8. Maximum allowed is 7.",
+      "value": "app/scripts/app.js::838: Function 'resolveInvokeError' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
@@ -428,6 +428,11 @@
     {
       "severity": 1,
       "value": "server/server.js::2561: Function 'buildForwardComment' has a complexity of 13. Maximum allowed is 7.",
+      "type": "lint"
+    },
+    {
+      "severity": 1,
+      "value": "server/server.js::2585: Function 'buildFreshdeskTicketLinkedComment' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {

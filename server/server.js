@@ -2585,11 +2585,11 @@ function buildForwardComment(payload) {
 function buildFreshdeskTicketLinkedComment(ticket) {
   const ticketId = normalizeText(ticket && ticket.id);
   const subject = normalizeText(ticket && ticket.subject);
-  const description = normalizeText(ticket && ticket.description_text);
+  const ticketUrl = normalizeText(ticket && (ticket.url || ticket.ticket_url || ticket.ticketUrl));
 
   return [
     `[Freshdesk Link] Ticket #${ticketId || "unknown"}${subject ? ` - ${subject}` : ""} is now connected to this card.`,
-    description ? `Ticket summary:\n${description}` : "",
+    ticketUrl ? `Freshdesk Ticket URL: ${ticketUrl}` : "",
   ]
     .filter(Boolean)
     .join("\n\n");

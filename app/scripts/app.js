@@ -769,11 +769,27 @@ function getTicketPayload() {
     id: getTicketId(),
     subject: getTicketSubject(),
     description_text: getTicketDescription(),
+    url: buildFreshdeskTicketUrl(getTicketId()),
   };
 }
 
 function getTrelloApiKey() {
   return normalizeText(state.iparams && state.iparams.trello_api_key);
+}
+
+function buildFreshdeskTicketUrl(ticketId) {
+  const normalizedTicketId = normalizeText(ticketId);
+  const domain = normalizeFreshdeskDomain(state.iparams && state.iparams.domain);
+
+  if (!normalizedTicketId || !domain) {
+    return "";
+  }
+
+  return `https://${domain}/a/tickets/${encodeURIComponent(normalizedTicketId)}`;
+}
+
+function normalizeFreshdeskDomain(value) {
+  return normalizeText(value).replace(/^https?:\/\//i, "").replace(/\/+$/, "");
 }
 
 async function invokeServerFunction(name, body) {
