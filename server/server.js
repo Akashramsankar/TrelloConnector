@@ -20,16 +20,16 @@ const CLICKUP_COMMENT_REVERSE_EVENTS = new Set([
   "taskUpdated",
 ]);
 const CLICKUP_PRIORITY_LABELS = {
-  "1": "Urgent",
-  "2": "High",
-  "3": "Normal",
-  "4": "Low",
+  1: "Urgent",
+  2: "High",
+  3: "Normal",
+  4: "Low",
 };
 const FRESHDESK_TO_CLICKUP_PRIORITY = {
-  "1": 4,
-  "2": 3,
-  "3": 2,
-  "4": 1,
+  1: 4,
+  2: 3,
+  3: 2,
+  4: 1,
 };
 
 function parseArgs(args) {
@@ -78,7 +78,10 @@ function escapeHtml(value) {
 }
 
 function stripHtml(value) {
-  return normalizeText(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return normalizeText(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function buildDbKey(ticketId) {
@@ -124,7 +127,9 @@ async function readTaskLinks(taskId) {
     const stored = await $db.get(key);
     return {
       task_id: normalizeText(taskId),
-      ticket_ids: Array.isArray(stored && stored.ticket_ids) ? stored.ticket_ids.map(normalizeText).filter(Boolean) : [],
+      ticket_ids: Array.isArray(stored && stored.ticket_ids)
+        ? stored.ticket_ids.map(normalizeText).filter(Boolean)
+        : [],
     };
   } catch (error) {
     if (error && error.status === 404) {
@@ -139,7 +144,13 @@ async function readTaskLinks(taskId) {
 
 async function writeTaskLinks(taskId, ticketIds) {
   const normalizedTaskId = normalizeText(taskId);
-  const uniqueTicketIds = Array.from(new Set((Array.isArray(ticketIds) ? ticketIds : []).map(normalizeText).filter(Boolean)));
+  const uniqueTicketIds = Array.from(
+    new Set(
+      (Array.isArray(ticketIds) ? ticketIds : [])
+        .map(normalizeText)
+        .filter(Boolean),
+    ),
+  );
 
   if (!uniqueTicketIds.length) {
     try {
@@ -160,14 +171,26 @@ async function writeTaskLinks(taskId, ticketIds) {
 
 async function syncReverseTaskLinks(ticketId, previousTasks, nextTasks) {
   const normalizedTicketId = normalizeText(ticketId);
-  const previousIds = new Set((Array.isArray(previousTasks) ? previousTasks : []).map((task) => normalizeText(task && task.task_id)).filter(Boolean));
-  const nextIds = new Set((Array.isArray(nextTasks) ? nextTasks : []).map((task) => normalizeText(task && task.task_id)).filter(Boolean));
-  const changedTaskIds = Array.from(new Set([...previousIds, ...nextIds])).filter(Boolean);
+  const previousIds = new Set(
+    (Array.isArray(previousTasks) ? previousTasks : [])
+      .map((task) => normalizeText(task && task.task_id))
+      .filter(Boolean),
+  );
+  const nextIds = new Set(
+    (Array.isArray(nextTasks) ? nextTasks : [])
+      .map((task) => normalizeText(task && task.task_id))
+      .filter(Boolean),
+  );
+  const changedTaskIds = Array.from(
+    new Set([...previousIds, ...nextIds]),
+  ).filter(Boolean);
 
   for (let index = 0; index < changedTaskIds.length; index += 1) {
     const taskId = changedTaskIds[index];
     const stored = await readTaskLinks(taskId);
-    let ticketIds = stored.ticket_ids.filter((storedTicketId) => storedTicketId !== normalizedTicketId);
+    let ticketIds = stored.ticket_ids.filter(
+      (storedTicketId) => storedTicketId !== normalizedTicketId,
+    );
 
     if (nextIds.has(taskId)) {
       ticketIds.push(normalizedTicketId);
@@ -196,7 +219,9 @@ async function readTrelloWebhookStore() {
     const stored = await $db.get(TRELLO_WEBHOOK_STORE_KEY);
     return {
       target_url: normalizeText(stored && stored.target_url),
-      registrations: Array.isArray(stored && stored.registrations) ? stored.registrations : [],
+      registrations: Array.isArray(stored && stored.registrations)
+        ? stored.registrations
+        : [],
     };
   } catch (error) {
     if (error && error.status === 404) {
@@ -232,8 +257,12 @@ async function readTrelloRuntimeSettings() {
     return {
       trello_api_key: resolveTrelloApiKey(stored && stored.trello_api_key),
       trello_token: normalizeText(stored && stored.trello_token),
-      trello_token_fingerprint: normalizeText(stored && stored.trello_token_fingerprint),
-      trello_token_saved_at: normalizeText(stored && stored.trello_token_saved_at),
+      trello_token_fingerprint: normalizeText(
+        stored && stored.trello_token_fingerprint,
+      ),
+      trello_token_saved_at: normalizeText(
+        stored && stored.trello_token_saved_at,
+      ),
       domain: normalizeDomain(stored && stored.domain),
       api_key: normalizeText(stored && stored.api_key),
     };
@@ -256,8 +285,12 @@ async function writeTrelloRuntimeSettings(settings) {
   const nextSettings = {
     trello_api_key: resolveTrelloApiKey(settings && settings.trello_api_key),
     trello_token: normalizeText(settings && settings.trello_token),
-    trello_token_fingerprint: normalizeText(settings && settings.trello_token_fingerprint),
-    trello_token_saved_at: normalizeText(settings && settings.trello_token_saved_at),
+    trello_token_fingerprint: normalizeText(
+      settings && settings.trello_token_fingerprint,
+    ),
+    trello_token_saved_at: normalizeText(
+      settings && settings.trello_token_saved_at,
+    ),
     domain: normalizeDomain(settings && settings.domain),
     api_key: normalizeText(settings && settings.api_key),
   };
@@ -295,7 +328,9 @@ async function isSuppressed(prefix, recordId, eventTimestamp) {
   }
 
   try {
-    const stored = await $db.get(buildSuppressionKey(prefix, normalizedRecordId));
+    const stored = await $db.get(
+      buildSuppressionKey(prefix, normalizedRecordId),
+    );
     const until = Number(stored && stored.until) || 0;
     const comparisonTime = Number(eventTimestamp) || Date.now();
 
@@ -303,6 +338,22 @@ async function isSuppressed(prefix, recordId, eventTimestamp) {
   } catch (error) {
     if (error && error.status === 404) {
       return false;
+    }
+    throw error;
+  }
+}
+
+async function readSuppression(prefix, recordId) {
+  const normalizedRecordId = normalizeText(recordId);
+  if (!normalizedRecordId) {
+    return null;
+  }
+
+  try {
+    return await $db.get(buildSuppressionKey(prefix, normalizedRecordId));
+  } catch (error) {
+    if (error && error.status === 404) {
+      return null;
     }
     throw error;
   }
@@ -318,8 +369,13 @@ async function isDuplicateTrelloLabelChange(ticketId, cardId, fingerprint) {
   }
 
   try {
-    const stored = await $db.get(buildTrelloLabelDedupeKey(normalizedTicketId, normalizedCardId));
-    return normalizeText(stored && stored.fingerprint) === normalizedFingerprint && Number(stored && stored.until) > Date.now();
+    const stored = await $db.get(
+      buildTrelloLabelDedupeKey(normalizedTicketId, normalizedCardId),
+    );
+    return (
+      normalizeText(stored && stored.fingerprint) === normalizedFingerprint &&
+      Number(stored && stored.until) > Date.now()
+    );
   } catch (error) {
     if (error && error.status === 404) {
       return false;
@@ -337,12 +393,15 @@ async function rememberTrelloLabelChange(ticketId, cardId, fingerprint) {
     return;
   }
 
-  await $db.set(buildTrelloLabelDedupeKey(normalizedTicketId, normalizedCardId), {
-    ticket_id: normalizedTicketId,
-    card_id: normalizedCardId,
-    fingerprint: normalizedFingerprint,
-    until: Date.now() + TRELLO_LABEL_DEDUPE_WINDOW_MS,
-  });
+  await $db.set(
+    buildTrelloLabelDedupeKey(normalizedTicketId, normalizedCardId),
+    {
+      ticket_id: normalizedTicketId,
+      card_id: normalizedCardId,
+      fingerprint: normalizedFingerprint,
+      until: Date.now() + TRELLO_LABEL_DEDUPE_WINDOW_MS,
+    },
+  );
 }
 
 async function readDashboardSummary() {
@@ -351,7 +410,9 @@ async function readDashboardSummary() {
     return {
       total_linked_tickets: Number(stored && stored.total_linked_tickets) || 0,
       total_linked_tasks: Number(stored && stored.total_linked_tasks) || 0,
-      tracked_ticket_ids: Array.isArray(stored && stored.tracked_ticket_ids) ? stored.tracked_ticket_ids : [],
+      tracked_ticket_ids: Array.isArray(stored && stored.tracked_ticket_ids)
+        ? stored.tracked_ticket_ids
+        : [],
     };
   } catch (error) {
     if (error && error.status === 404) {
@@ -408,10 +469,17 @@ function buildRecentTaskEntries(ticketId, tasks) {
 
 function sortRecentEntries(items) {
   return (Array.isArray(items) ? items : [])
-    .filter((item) => item && normalizeText(item.ticket_id) && normalizeText(item.task_id))
+    .filter(
+      (item) =>
+        item && normalizeText(item.ticket_id) && normalizeText(item.task_id),
+    )
     .sort((left, right) => {
-      const leftTime = new Date(left.last_synced_at || left.linked_at || 0).getTime();
-      const rightTime = new Date(right.last_synced_at || right.linked_at || 0).getTime();
+      const leftTime = new Date(
+        left.last_synced_at || left.linked_at || 0,
+      ).getTime();
+      const rightTime = new Date(
+        right.last_synced_at || right.linked_at || 0,
+      ).getTime();
       return rightTime - leftTime;
     });
 }
@@ -441,7 +509,9 @@ function buildDashboardTicketEntry(ticketId, tasks) {
     workspace_name: normalizeText(latestTask.workspace_name),
     space_name: normalizeText(latestTask.space_name),
     list_name: normalizeText(latestTask.list_name),
-    last_activity_at: normalizeText(latestTask.last_synced_at || latestTask.linked_at),
+    last_activity_at: normalizeText(
+      latestTask.last_synced_at || latestTask.linked_at,
+    ),
     has_sync_error: syncErrors.length > 0,
     sync_error: syncErrors[0] || "",
   };
@@ -463,7 +533,9 @@ function buildDashboardInsights(linkedTickets) {
     if (ticket.has_sync_error) {
       needsAttentionTickets += 1;
     } else {
-      const lastActivity = new Date(normalizeText(ticket.last_activity_at) || 0).getTime();
+      const lastActivity = new Date(
+        normalizeText(ticket.last_activity_at) || 0,
+      ).getTime();
       if (!lastActivity || now - lastActivity > staleMs) {
         staleTickets += 1;
       } else {
@@ -491,17 +563,29 @@ function buildDashboardInsights(linkedTickets) {
 
   const board_distribution = Object.keys(boardMap)
     .map(function (board) {
-      return { board: board, ticket_count: boardMap[board].ticket_count, card_count: boardMap[board].card_count };
+      return {
+        board: board,
+        ticket_count: boardMap[board].ticket_count,
+        card_count: boardMap[board].card_count,
+      };
     })
-    .sort(function (a, b) { return b.card_count - a.card_count; })
+    .sort(function (a, b) {
+      return b.card_count - a.card_count;
+    })
     .slice(0, 5);
 
   const list_distribution = Object.keys(listMap)
-    .map(function (list) { return { list: list, count: listMap[list] }; })
-    .sort(function (a, b) { return b.count - a.count; })
+    .map(function (list) {
+      return { list: list, count: listMap[list] };
+    })
+    .sort(function (a, b) {
+      return b.count - a.count;
+    })
     .slice(0, 5);
 
-  multiCardTickets.sort(function (a, b) { return b.task_count - a.task_count; });
+  multiCardTickets.sort(function (a, b) {
+    return b.task_count - a.task_count;
+  });
 
   return {
     sync_health: {
@@ -519,6 +603,22 @@ function buildDashboardInsights(linkedTickets) {
   };
 }
 
+function buildDashboardSummaryFromTickets(linkedTickets, storedSummary) {
+  const tickets = Array.isArray(linkedTickets) ? linkedTickets : [];
+  const trackedTicketIds = tickets
+    .map((ticket) => normalizeText(ticket && ticket.ticket_id))
+    .filter(Boolean);
+
+  return {
+    ...(storedSummary || {}),
+    total_linked_tickets: trackedTicketIds.length,
+    total_linked_tasks: tickets.reduce((total, ticket) => {
+      return total + (Number(ticket && ticket.task_count) || 0);
+    }, 0),
+    tracked_ticket_ids: trackedTicketIds,
+  };
+}
+
 async function syncDashboardSummary(ticketId, previousTasks, nextTasks) {
   const previous = Array.isArray(previousTasks) ? previousTasks : [];
   const next = Array.isArray(nextTasks) ? nextTasks : [];
@@ -526,12 +626,16 @@ async function syncDashboardSummary(ticketId, previousTasks, nextTasks) {
   const summary = await readDashboardSummary();
   const recent = await readDashboardRecent();
   const tickets = await readDashboardTickets();
-  const trackedTicketIds = Array.isArray(summary.tracked_ticket_ids) ? summary.tracked_ticket_ids.slice() : [];
+  const trackedTicketIds = Array.isArray(summary.tracked_ticket_ids)
+    ? summary.tracked_ticket_ids.slice()
+    : [];
 
   const previouslyLinked = previous.length > 0;
   const currentlyLinked = next.length > 0;
   let totalLinkedTickets = summary.total_linked_tickets;
-  let nextTrackedTicketIds = trackedTicketIds.filter((id) => normalizeText(id) !== normalizeText(ticketId));
+  let nextTrackedTicketIds = trackedTicketIds.filter(
+    (id) => normalizeText(id) !== normalizeText(ticketId),
+  );
 
   if (!previouslyLinked && currentlyLinked) {
     totalLinkedTickets += 1;
@@ -545,21 +649,22 @@ async function syncDashboardSummary(ticketId, previousTasks, nextTasks) {
 
   const totalLinkedTasks = Math.max(
     0,
-    summary.total_linked_tasks + next.length - previous.length
+    summary.total_linked_tasks + next.length - previous.length,
   );
 
   const filteredRecent = recent.filter((item) => {
     return normalizeText(item && item.ticket_id) !== normalizeText(ticketId);
   });
-  const nextRecent = sortRecentEntries(filteredRecent.concat(buildRecentTaskEntries(ticketId, next))).slice(
-    0,
-    DASHBOARD_RECENT_LIMIT
-  );
+  const nextRecent = sortRecentEntries(
+    filteredRecent.concat(buildRecentTaskEntries(ticketId, next)),
+  ).slice(0, DASHBOARD_RECENT_LIMIT);
   const filteredTickets = tickets.filter((item) => {
     return normalizeText(item && item.ticket_id) !== normalizeText(ticketId);
   });
   const nextTicketEntries = currentlyLinked
-    ? sortDashboardTickets(filteredTickets.concat(buildDashboardTicketEntry(ticketId, next)))
+    ? sortDashboardTickets(
+        filteredTickets.concat(buildDashboardTicketEntry(ticketId, next)),
+      )
     : sortDashboardTickets(filteredTickets);
 
   await $db.set(DASHBOARD_SUMMARY_KEY, {
@@ -591,7 +696,10 @@ async function invokeTemplate(name, context, body) {
   return {
     status: Number(response && response.status) || 0,
     headers: (response && response.headers) || {},
-    data: safeParseJson(response && response.response, response && response.response),
+    data: safeParseJson(
+      response && response.response,
+      response && response.response,
+    ),
     raw: response && response.response,
   };
 }
@@ -688,7 +796,9 @@ function normalizeWorkspace(item) {
 
 function normalizeWorkspaceMembers(items) {
   return (Array.isArray(items) ? items : [])
-    .map((member) => normalizeAssignee(member && member.user ? member.user : member))
+    .map((member) =>
+      normalizeAssignee(member && member.user ? member.user : member),
+    )
     .filter(Boolean);
 }
 
@@ -754,7 +864,7 @@ function normalizeTrelloLabels(items) {
       const id = normalizeText(item.id);
       const name = normalizeText(item.name);
       const color = normalizeText(item.color);
-      return (id || name || color) ? { id, name, color } : null;
+      return id || name || color ? { id, name, color } : null;
     })
     .filter(Boolean);
 }
@@ -767,7 +877,9 @@ function normalizeTrelloMember(item) {
 
   return {
     id,
-    name: normalizeText(item && (item.fullName || item.username || item.name)) || `Member ${id}`,
+    name:
+      normalizeText(item && (item.fullName || item.username || item.name)) ||
+      `Member ${id}`,
     username: normalizeText(item && item.username),
     avatar_url: normalizeText(item && item.avatarUrl),
   };
@@ -787,14 +899,16 @@ function normalizeTrelloLabel(item) {
 }
 
 function normalizeTrelloCardRecord(card, meta) {
-  const cardId = normalizeText(card && card.id ? card.id : meta && meta.task_id);
+  const cardId = normalizeText(
+    card && card.id ? card.id : meta && meta.task_id,
+  );
   if (!cardId) {
     return null;
   }
 
   const cardLabels = Array.isArray(card && card.labels) ? card.labels : null;
   const labels = normalizeTrelloLabels(
-    (cardLabels && cardLabels.length) ? cardLabels : (meta && meta.labels)
+    cardLabels && cardLabels.length ? cardLabels : meta && meta.labels,
   );
 
   const cardMembers = Array.isArray(card && card.members) ? card.members : [];
@@ -806,20 +920,31 @@ function normalizeTrelloCardRecord(card, meta) {
 
   return {
     task_id: cardId,
-    task_name: normalizeText(card && card.name) || normalizeText(meta && meta.task_name) || `Card ${cardId}`,
-    task_url: normalizeText(card && card.url) || normalizeText(meta && meta.task_url),
+    task_name:
+      normalizeText(card && card.name) ||
+      normalizeText(meta && meta.task_name) ||
+      `Card ${cardId}`,
+    task_url:
+      normalizeText(card && card.url) || normalizeText(meta && meta.task_url),
     workspace_id: normalizeText(meta && meta.workspace_id),
     workspace_name: normalizeText(meta && meta.workspace_name),
     space_id: "",
     space_name: "",
-    list_id: normalizeText(meta && meta.list_id) || normalizeText(card && card.idList),
+    list_id:
+      normalizeText(meta && meta.list_id) || normalizeText(card && card.idList),
     list_name: normalizeText(meta && meta.list_name),
     priority: "",
-    priority_label: labels.map((l) => l.name || l.color).filter(Boolean).join(", "),
+    priority_label: labels
+      .map((l) => l.name || l.color)
+      .filter(Boolean)
+      .join(", "),
     status: isClosed ? "Archived" : "Open",
-    due_date: normalizeDueDate(card && card.due ? card.due : meta && meta.due_date),
+    due_date: normalizeDueDate(
+      card && card.due ? card.due : meta && meta.due_date,
+    ),
     assignees,
-    linked_at: normalizeText(meta && meta.linked_at) || new Date().toISOString(),
+    linked_at:
+      normalizeText(meta && meta.linked_at) || new Date().toISOString(),
     source: normalizeText(meta && meta.source) || "linked",
     last_synced_at: normalizeText(meta && meta.last_synced_at),
     last_sync_error: normalizeText(meta && meta.last_sync_error),
@@ -835,7 +960,11 @@ function sanitizeTrelloCardLinkPayload(card, meta) {
       url: card && (card.task_url || card.card_url || card.url),
       due: card && (card.due_date || card.due),
       labels: card && card.labels,
-      closed: Boolean(card && (card.closed || normalizeText(card.status).toLowerCase() === "archived")),
+      closed: Boolean(
+        card &&
+        (card.closed ||
+          normalizeText(card.status).toLowerCase() === "archived"),
+      ),
       idList: card && (card.list_id || card.idList),
     },
     {
@@ -845,7 +974,7 @@ function sanitizeTrelloCardLinkPayload(card, meta) {
       list_name: normalizeText(meta && meta.list_name),
       linked_at: new Date().toISOString(),
       source: normalizeText(meta && meta.source) || "linked",
-    }
+    },
   );
 }
 
@@ -920,7 +1049,9 @@ function resolveClickupPriorityLabel(priority) {
 }
 
 function normalizeAssignee(item) {
-  const id = normalizeText(item && (item.id || item.userid || item.user_id || item.assignee));
+  const id = normalizeText(
+    item && (item.id || item.userid || item.user_id || item.assignee),
+  );
   if (!id) {
     return null;
   }
@@ -928,8 +1059,9 @@ function normalizeAssignee(item) {
   return {
     id,
     name:
-      normalizeText(item && (item.fullName || item.name || item.username || item.email)) ||
-      `User ${id}`,
+      normalizeText(
+        item && (item.fullName || item.name || item.username || item.email),
+      ) || `User ${id}`,
     email: normalizeText(item && item.email),
   };
 }
@@ -959,19 +1091,29 @@ function normalizeDueDate(value) {
 }
 
 function buildTaskUrl(taskId, taskUrl) {
-  return normalizeText(taskUrl) || `https://app.clickup.com/t/${normalizeText(taskId)}`;
+  return (
+    normalizeText(taskUrl) ||
+    `https://app.clickup.com/t/${normalizeText(taskId)}`
+  );
 }
 
 function normalizeTaskRecord(task, meta) {
-  const taskId = normalizeText(task && task.id ? task.id : meta && meta.task_id);
+  const taskId = normalizeText(
+    task && task.id ? task.id : meta && meta.task_id,
+  );
   if (!taskId) {
     return null;
   }
 
-  const priorityValue = resolveClickupPriorityValue(task && task.priority ? task.priority : meta && meta.priority);
+  const priorityValue = resolveClickupPriorityValue(
+    task && task.priority ? task.priority : meta && meta.priority,
+  );
   const statusValue =
-    normalizeText(task && task.status && (task.status.status || task.status.type || task.status.label)) ||
-    normalizeText(meta && meta.status);
+    normalizeText(
+      task &&
+        task.status &&
+        (task.status.status || task.status.type || task.status.label),
+    ) || normalizeText(meta && meta.status);
 
   return {
     task_id: taskId,
@@ -979,7 +1121,10 @@ function normalizeTaskRecord(task, meta) {
       normalizeText(task && task.name) ||
       normalizeText(meta && meta.task_name) ||
       `Task ${taskId}`,
-    task_url: buildTaskUrl(taskId, task && task.url ? task.url : meta && meta.task_url),
+    task_url: buildTaskUrl(
+      taskId,
+      task && task.url ? task.url : meta && meta.task_url,
+    ),
     workspace_id: normalizeText(meta && meta.workspace_id),
     workspace_name: normalizeText(meta && meta.workspace_name),
     space_id: normalizeText(meta && meta.space_id),
@@ -991,11 +1136,18 @@ function normalizeTaskRecord(task, meta) {
       normalizeText(meta && meta.list_name) ||
       normalizeText(task && task.list && task.list.name),
     priority: priorityValue,
-    priority_label: CLICKUP_PRIORITY_LABELS[priorityValue] || resolveClickupPriorityLabel(task && task.priority),
+    priority_label:
+      CLICKUP_PRIORITY_LABELS[priorityValue] ||
+      resolveClickupPriorityLabel(task && task.priority),
     status: statusValue,
-    due_date: normalizeDueDate(task && task.due_date ? task.due_date : meta && meta.due_date),
-    assignees: normalizeAssignees(task && task.assignees ? task.assignees : meta && meta.assignees),
-    linked_at: normalizeText(meta && meta.linked_at) || new Date().toISOString(),
+    due_date: normalizeDueDate(
+      task && task.due_date ? task.due_date : meta && meta.due_date,
+    ),
+    assignees: normalizeAssignees(
+      task && task.assignees ? task.assignees : meta && meta.assignees,
+    ),
+    linked_at:
+      normalizeText(meta && meta.linked_at) || new Date().toISOString(),
     source: normalizeText(meta && meta.source) || "linked",
     last_synced_at: normalizeText(meta && meta.last_synced_at),
     last_sync_error: normalizeText(meta && meta.last_sync_error),
@@ -1006,13 +1158,19 @@ function sortLinkedTasks(tasks) {
   return (Array.isArray(tasks) ? tasks : [])
     .filter((task) => task && normalizeText(task.task_id))
     .sort((left, right) => {
-      return new Date(right.linked_at || 0).getTime() - new Date(left.linked_at || 0).getTime();
+      return (
+        new Date(right.linked_at || 0).getTime() -
+        new Date(left.linked_at || 0).getTime()
+      );
     });
 }
 
 function upsertLinkedTask(tasks, taskRecord) {
   const filtered = (Array.isArray(tasks) ? tasks : []).filter((task) => {
-    return normalizeText(task && task.task_id) !== normalizeText(taskRecord && taskRecord.task_id);
+    return (
+      normalizeText(task && task.task_id) !==
+      normalizeText(taskRecord && taskRecord.task_id)
+    );
   });
 
   return sortLinkedTasks(filtered.concat(taskRecord));
@@ -1057,7 +1215,7 @@ function sanitizeTaskLinkPayload(task, meta) {
       list_name: meta.list_name,
       source: normalizeText(meta.source) || "linked",
       linked_at: new Date().toISOString(),
-    }
+    },
   );
 }
 
@@ -1136,7 +1294,11 @@ function mapFreshdeskPriorityToClickup(priority) {
       urgent: 1,
     };
 
-    return labelMap[normalized] || FRESHDESK_TO_CLICKUP_PRIORITY[normalizeText(priority)] || null;
+    return (
+      labelMap[normalized] ||
+      FRESHDESK_TO_CLICKUP_PRIORITY[normalizeText(priority)] ||
+      null
+    );
   }
 
   if (typeof priority === "object") {
@@ -1164,7 +1326,9 @@ function buildTicketSyncPayload(ticket) {
   const subject = normalizeText(ticket && ticket.subject);
   const description = buildTaskDescription(ticket);
   const priority = mapFreshdeskPriorityToClickup(ticket && ticket.priority);
-  const status = resolveClickupStatusForFreshdeskStatus(ticket && ticket.status);
+  const status = resolveClickupStatusForFreshdeskStatus(
+    ticket && ticket.status,
+  );
 
   if (subject) {
     updatePayload.name = subject;
@@ -1186,14 +1350,20 @@ function buildTicketSyncPayload(ticket) {
 }
 
 function normalizeDomain(value) {
-  return normalizeText(value).replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  return normalizeText(value)
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "");
 }
 
 function resolveSettings(payload) {
   if (payload && payload.iparams && typeof payload.iparams === "object") {
     return payload.iparams;
   }
-  if (payload && payload.app_settings && typeof payload.app_settings === "object") {
+  if (
+    payload &&
+    payload.app_settings &&
+    typeof payload.app_settings === "object"
+  ) {
     return payload.app_settings;
   }
   return {};
@@ -1210,16 +1380,23 @@ function resolveTrelloApiKey(value) {
   return normalizeText(value) || TRELLO_APP_KEY;
 }
 
-async function buildTrelloRequestContext(context, trelloApiKey, trelloToken, diagnostics) {
+async function buildTrelloRequestContext(
+  context,
+  trelloApiKey,
+  trelloToken,
+  diagnostics,
+) {
   const runtime = await readTrelloRuntimeSettings();
   return {
     ...(context || {}),
     trello_api_key: resolveTrelloApiKey(trelloApiKey || runtime.trello_api_key),
     trello_token: normalizeText(trelloToken || runtime.trello_token),
     trello_token_fingerprint:
-      normalizeText(diagnostics && diagnostics.trello_token_fingerprint) || runtime.trello_token_fingerprint,
+      normalizeText(diagnostics && diagnostics.trello_token_fingerprint) ||
+      runtime.trello_token_fingerprint,
     trello_token_saved_at:
-      normalizeText(diagnostics && diagnostics.trello_token_saved_at) || runtime.trello_token_saved_at,
+      normalizeText(diagnostics && diagnostics.trello_token_saved_at) ||
+      runtime.trello_token_saved_at,
   };
 }
 
@@ -1238,30 +1415,26 @@ function extractExternalPayload(payload) {
 function looksLikeClickupComment(value) {
   return Boolean(
     value &&
-      typeof value === "object" &&
-      (
-        normalizeText(value.id) ||
-        normalizeText(value.text) ||
-        Array.isArray(value.comment) ||
-        (value.user && typeof value.user === "object")
-      )
+    typeof value === "object" &&
+    (normalizeText(value.id) ||
+      normalizeText(value.text) ||
+      Array.isArray(value.comment) ||
+      (value.user && typeof value.user === "object")),
   );
 }
 
 function getClickupEventName(payload) {
   const external = extractExternalPayload(payload);
   return normalizeText(
-    external && (
-      external.event ||
-      external.event_type ||
-      external.type
-    )
+    external && (external.event || external.event_type || external.type),
   );
 }
 
 function getClickupEventTaskId(payload) {
   const external = extractExternalPayload(payload);
-  const historyItems = Array.isArray(external && external.history_items) ? external.history_items : [];
+  const historyItems = Array.isArray(external && external.history_items)
+    ? external.history_items
+    : [];
 
   const candidates = [
     external && external.task_id,
@@ -1289,13 +1462,19 @@ function isSupportedClickupReverseEvent(eventName) {
 }
 
 function normalizeStringList(items) {
-  return Array.from(new Set((Array.isArray(items) ? items : []).map(normalizeText).filter(Boolean)));
+  return Array.from(
+    new Set(
+      (Array.isArray(items) ? items : []).map(normalizeText).filter(Boolean),
+    ),
+  );
 }
 
 function getStoredTaskRecord(storedTasks, taskId) {
-  return (Array.isArray(storedTasks) ? storedTasks : []).find((task) => {
-    return normalizeText(task && task.task_id) === normalizeText(taskId);
-  }) || null;
+  return (
+    (Array.isArray(storedTasks) ? storedTasks : []).find((task) => {
+      return normalizeText(task && task.task_id) === normalizeText(taskId);
+    }) || null
+  );
 }
 
 function getStoredTaskCommentIds(taskRecord) {
@@ -1303,7 +1482,9 @@ function getStoredTaskCommentIds(taskRecord) {
 }
 
 function extractClickupCommentText(comment) {
-  const items = Array.isArray(comment && comment.comment) ? comment.comment : [];
+  const items = Array.isArray(comment && comment.comment)
+    ? comment.comment
+    : [];
   const text = items
     .map((item) => normalizeText(item && item.text))
     .filter(Boolean)
@@ -1318,13 +1499,15 @@ function isFreshdeskMirroredClickupComment(comment) {
 }
 
 function buildClickupCommentNoteBody(taskPayload, comment) {
-  const taskName = normalizeText(taskPayload && taskPayload.name) || `Task ${normalizeText(taskPayload && taskPayload.id)}`;
+  const taskName =
+    normalizeText(taskPayload && taskPayload.name) ||
+    `Task ${normalizeText(taskPayload && taskPayload.id)}`;
   const taskUrl = normalizeText(taskPayload && taskPayload.url);
   const author =
     normalizeText(
       comment &&
         comment.user &&
-        (comment.user.username || comment.user.email || comment.user.name)
+        (comment.user.username || comment.user.email || comment.user.name),
     ) || "ClickUp user";
   const commentText = escapeHtml(extractClickupCommentText(comment));
   const taskLabel = taskUrl
@@ -1348,7 +1531,9 @@ function buildTaskMetaFromStoredRecord(taskRecord) {
     list_id: normalizeText(taskRecord && taskRecord.list_id),
     list_name: normalizeText(taskRecord && taskRecord.list_name),
     source: normalizeText(taskRecord && taskRecord.source) || "linked",
-    linked_at: normalizeText(taskRecord && taskRecord.linked_at) || new Date().toISOString(),
+    linked_at:
+      normalizeText(taskRecord && taskRecord.linked_at) ||
+      new Date().toISOString(),
     last_sync_error: normalizeText(taskRecord && taskRecord.last_sync_error),
     last_synced_at: normalizeText(taskRecord && taskRecord.last_synced_at),
     synced_comment_ids: getStoredTaskCommentIds(taskRecord),
@@ -1362,12 +1547,18 @@ function buildTrelloTaskMetaFromStoredRecord(taskRecord) {
     list_id: normalizeText(taskRecord && taskRecord.list_id),
     list_name: normalizeText(taskRecord && taskRecord.list_name),
     assignees: normalizeAssignees(taskRecord && taskRecord.assignees),
-    labels: Array.isArray(taskRecord && taskRecord.labels) ? taskRecord.labels : [],
-    linked_at: normalizeText(taskRecord && taskRecord.linked_at) || new Date().toISOString(),
+    labels: Array.isArray(taskRecord && taskRecord.labels)
+      ? taskRecord.labels
+      : [],
+    linked_at:
+      normalizeText(taskRecord && taskRecord.linked_at) ||
+      new Date().toISOString(),
     source: normalizeText(taskRecord && taskRecord.source) || "linked",
     last_sync_error: normalizeText(taskRecord && taskRecord.last_sync_error),
     last_synced_at: normalizeText(taskRecord && taskRecord.last_synced_at),
-    labels: Array.isArray(taskRecord && taskRecord.labels) ? taskRecord.labels : [],
+    labels: Array.isArray(taskRecord && taskRecord.labels)
+      ? taskRecord.labels
+      : [],
     task_name: normalizeText(taskRecord && taskRecord.task_name),
     task_url: normalizeText(taskRecord && taskRecord.task_url),
     due_date: normalizeText(taskRecord && taskRecord.due_date),
@@ -1376,9 +1567,13 @@ function buildTrelloTaskMetaFromStoredRecord(taskRecord) {
 
 function findTrelloWebhookRegistration(registrations, cardId) {
   const normalizedCardId = normalizeText(cardId);
-  return (Array.isArray(registrations) ? registrations : []).find((registration) => {
-    return normalizeText(registration && registration.card_id) === normalizedCardId;
-  }) || null;
+  return (
+    (Array.isArray(registrations) ? registrations : []).find((registration) => {
+      return (
+        normalizeText(registration && registration.card_id) === normalizedCardId
+      );
+    }) || null
+  );
 }
 
 async function cleanupRegisteredTrelloWebhooks(registrations, trelloApiKey) {
@@ -1399,8 +1594,8 @@ async function cleanupRegisteredTrelloWebhooks(registrations, trelloApiKey) {
           {
             webhook_id: webhookId,
           },
-          trelloApiKey
-        )
+          trelloApiKey,
+        ),
       );
     } catch (error) {
       console.error("Failed to delete Trello webhook:", webhookId, error);
@@ -1421,12 +1616,16 @@ async function registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey) {
   }
 
   const payload = ensureSuccess(
-    await invokeTemplate("trello_webhook_create", await buildTrelloRequestContext({}, trelloApiKey), {
-      description: `Freshdesk Trello Connector webhook for card ${cardId}`,
-      callbackURL: endpoint,
-      idModel: cardId,
-    }),
-    "Could not register the Trello webhook."
+    await invokeTemplate(
+      "trello_webhook_create",
+      await buildTrelloRequestContext({}, trelloApiKey),
+      {
+        description: `Freshdesk Trello Connector webhook for card ${cardId}`,
+        callbackURL: endpoint,
+        idModel: cardId,
+      },
+    ),
+    "Could not register the Trello webhook.",
   );
 
   return {
@@ -1449,12 +1648,17 @@ async function ensureTrelloWebhookRegistration(cardRecord, trelloApiKey) {
   const targetUrl = normalizeText(store && store.target_url);
 
   if (!targetUrl) {
-    throw new Error("Webhook callback URL is not available yet. Update the app settings once to finish webhook setup.");
+    throw new Error(
+      "Webhook callback URL is not available yet. Update the app settings once to finish webhook setup.",
+    );
   }
 
   const existing = findTrelloWebhookRegistration(store.registrations, cardId);
 
-  if (existing && normalizeText(existing.endpoint || store.target_url) === targetUrl) {
+  if (
+    existing &&
+    normalizeText(existing.endpoint || store.target_url) === targetUrl
+  ) {
     return existing;
   }
 
@@ -1466,15 +1670,23 @@ async function ensureTrelloWebhookRegistration(cardRecord, trelloApiKey) {
           {
             webhook_id: normalizeText(existing.webhook_id),
           },
-          trelloApiKey
-        )
+          trelloApiKey,
+        ),
       );
     } catch (error) {
-      console.error("Failed to refresh stale Trello webhook registration:", existing.webhook_id, error);
+      console.error(
+        "Failed to refresh stale Trello webhook registration:",
+        existing.webhook_id,
+        error,
+      );
     }
   }
 
-  const registration = await registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey);
+  const registration = await registerTrelloWebhook(
+    cardRecord,
+    targetUrl,
+    trelloApiKey,
+  );
   const remaining = (store.registrations || []).filter((item) => {
     return normalizeText(item && item.card_id) !== cardId;
   });
@@ -1495,7 +1707,10 @@ async function cleanupTrelloWebhookIfUnused(cardId, trelloApiKey) {
   }
 
   const store = await readTrelloWebhookStore();
-  const registration = findTrelloWebhookRegistration(store.registrations, normalizedCardId);
+  const registration = findTrelloWebhookRegistration(
+    store.registrations,
+    normalizedCardId,
+  );
 
   if (!registration) {
     return;
@@ -1509,28 +1724,38 @@ async function cleanupTrelloWebhookIfUnused(cardId, trelloApiKey) {
           {
             webhook_id: normalizeText(registration.webhook_id),
           },
-          trelloApiKey
-        )
+          trelloApiKey,
+        ),
       );
     }
   } catch (error) {
-    console.error("Failed to clean up unused Trello webhook:", normalizedCardId, error);
+    console.error(
+      "Failed to clean up unused Trello webhook:",
+      normalizedCardId,
+      error,
+    );
   }
 
   await writeTrelloWebhookStore(
     store.target_url,
-    (store.registrations || []).filter((item) => normalizeText(item && item.card_id) !== normalizedCardId)
+    (store.registrations || []).filter(
+      (item) => normalizeText(item && item.card_id) !== normalizedCardId,
+    ),
   );
 }
 
 function applySyncedTicketDetails(task, ticket, syncTimestamp) {
-  const mappedPriority = mapFreshdeskPriorityToClickup(ticket && ticket.priority);
+  const mappedPriority = mapFreshdeskPriorityToClickup(
+    ticket && ticket.priority,
+  );
 
   return {
     ...task,
     task_name: normalizeText(ticket && ticket.subject) || task.task_name,
     priority: mappedPriority ? String(mappedPriority) : task.priority,
-    priority_label: mappedPriority ? CLICKUP_PRIORITY_LABELS[String(mappedPriority)] : task.priority_label,
+    priority_label: mappedPriority
+      ? CLICKUP_PRIORITY_LABELS[String(mappedPriority)]
+      : task.priority_label,
     last_synced_at: syncTimestamp,
     last_sync_error: "",
   };
@@ -1561,11 +1786,16 @@ function normalizeBoolean(value, fallback) {
 }
 
 function isAutomaticSyncEnabled(payload) {
-  return normalizeBoolean(getEventIparams(payload).automatic_sync_enabled, true);
+  return normalizeBoolean(
+    getEventIparams(payload).automatic_sync_enabled,
+    true,
+  );
 }
 
 function resolveClickupCommentSyncMode(settings) {
-  const mode = normalizeText(settings && settings.clickup_comment_sync_mode).toLowerCase();
+  const mode = normalizeText(
+    settings && settings.clickup_comment_sync_mode,
+  ).toLowerCase();
   if (["none", "public", "private"].includes(mode)) {
     return mode;
   }
@@ -1586,9 +1816,14 @@ function parseNotificationConfig(value) {
 }
 
 function resolveTrelloToFreshdeskNotifications(settings) {
-  const fallback = normalizeText(settings && settings.trello_to_freshdesk_sync_mode).toLowerCase() || "none";
+  const fallback =
+    normalizeText(
+      settings && settings.trello_to_freshdesk_sync_mode,
+    ).toLowerCase() || "none";
   const allowed = new Set(["none", "private_note_notify", "public_note"]);
-  const parsed = parseNotificationConfig(settings && settings.trello_to_freshdesk_notifications);
+  const parsed = parseNotificationConfig(
+    settings && settings.trello_to_freshdesk_notifications,
+  );
   const output = {};
 
   [
@@ -1609,9 +1844,14 @@ function resolveTrelloToFreshdeskNotifications(settings) {
 }
 
 function resolveFreshdeskToTrelloNotifications(settings) {
-  const fallback = normalizeText(settings && settings.freshdesk_to_trello_sync_mode).toLowerCase() || "none";
+  const fallback =
+    normalizeText(
+      settings && settings.freshdesk_to_trello_sync_mode,
+    ).toLowerCase() || "none";
   const allowed = new Set(["none", "comment"]);
-  const parsed = parseNotificationConfig(settings && settings.freshdesk_to_trello_notifications);
+  const parsed = parseNotificationConfig(
+    settings && settings.freshdesk_to_trello_notifications,
+  );
   const output = {};
 
   [
@@ -1629,11 +1869,17 @@ function resolveFreshdeskToTrelloNotifications(settings) {
 }
 
 function getTrelloToFreshdeskNotificationAction(settings, eventKey) {
-  return resolveTrelloToFreshdeskNotifications(settings)[normalizeText(eventKey)] || "none";
+  return (
+    resolveTrelloToFreshdeskNotifications(settings)[normalizeText(eventKey)] ||
+    "none"
+  );
 }
 
 function getFreshdeskToTrelloNotificationAction(settings, eventKey) {
-  return resolveFreshdeskToTrelloNotifications(settings)[normalizeText(eventKey)] || "none";
+  return (
+    resolveFreshdeskToTrelloNotifications(settings)[normalizeText(eventKey)] ||
+    "none"
+  );
 }
 
 function normalizeEventTicket(payload) {
@@ -1651,10 +1897,14 @@ function normalizeEventTicket(payload) {
         conversation.ticket_id ||
         conversation.ticketId ||
         actor.ticket_id ||
-        actor.ticketId
+        actor.ticketId,
     ),
     subject: normalizeText(ticket.subject),
-    description_text: normalizeText(ticket.description_text || ticket.descriptionText || stripHtml(ticket.description)),
+    description_text: normalizeText(
+      ticket.description_text ||
+        ticket.descriptionText ||
+        stripHtml(ticket.description),
+    ),
     description: normalizeText(ticket.description),
     priority: normalizeText(ticket.priority),
     status: normalizeText(ticket.status),
@@ -1674,16 +1924,24 @@ function normalizeFieldMappings(value) {
   const list = Array.isArray(value) ? value : safeParseJson(value, []);
   return (Array.isArray(list) ? list : [])
     .map((mapping) => ({
-      freshdesk_field_name: normalizeText(mapping && mapping.freshdesk_field_name),
-      freshdesk_field_key: normalizeText(mapping && mapping.freshdesk_field_key),
+      freshdesk_field_name: normalizeText(
+        mapping && mapping.freshdesk_field_name,
+      ),
+      freshdesk_field_key: normalizeText(
+        mapping && mapping.freshdesk_field_key,
+      ),
       clickup_field_id: normalizeText(mapping && mapping.clickup_field_id),
       clickup_field_type: normalizeText(mapping && mapping.clickup_field_type),
       clickup_field_type_config:
-        mapping && mapping.clickup_field_type_config && typeof mapping.clickup_field_type_config === "object"
+        mapping &&
+        mapping.clickup_field_type_config &&
+        typeof mapping.clickup_field_type_config === "object"
           ? mapping.clickup_field_type_config
           : safeParseJson(mapping && mapping.clickup_field_type_config, {}),
     }))
-    .filter((mapping) => mapping.freshdesk_field_key && mapping.clickup_field_id);
+    .filter(
+      (mapping) => mapping.freshdesk_field_key && mapping.clickup_field_id,
+    );
 }
 
 function normalizeTicketCustomFields(value) {
@@ -1701,21 +1959,30 @@ function buildFreshdeskFieldLookupTokens(value) {
   }
 
   const compact = normalized.toLowerCase();
-  const slug = compact
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+  const slug = compact.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
   const unprefixed = slug.startsWith("cf_") ? slug.slice(3) : slug;
 
   return Array.from(
     new Set(
-      [normalized, compact, slug, `cf_${slug}`, unprefixed, `cf_${unprefixed}`].filter(Boolean)
-    )
+      [
+        normalized,
+        compact,
+        slug,
+        `cf_${slug}`,
+        unprefixed,
+        `cf_${unprefixed}`,
+      ].filter(Boolean),
+    ),
   );
 }
 
 function getCanonicalFreshdeskFieldToken(value) {
   const tokens = buildFreshdeskFieldLookupTokens(value);
-  return tokens.find((token) => token.startsWith("cf_")) || tokens.find(Boolean) || "";
+  return (
+    tokens.find((token) => token.startsWith("cf_")) ||
+    tokens.find(Boolean) ||
+    ""
+  );
 }
 
 function getMappedFreshdeskFieldValue(mapping, ticketCustomFields) {
@@ -1738,7 +2005,12 @@ function getMappedFreshdeskFieldValue(mapping, ticketCustomFields) {
     }
   }
 
-  const normalizedLookup = new Map(entries.map(([key, value]) => [getCanonicalFreshdeskFieldToken(key), value]));
+  const normalizedLookup = new Map(
+    entries.map(([key, value]) => [
+      getCanonicalFreshdeskFieldToken(key),
+      value,
+    ]),
+  );
 
   for (let index = 0; index < directTokens.length; index += 1) {
     const token = directTokens[index];
@@ -1806,13 +2078,18 @@ function findOptionId(options, rawValue) {
   }
 
   const items = Array.isArray(options) ? options : [];
-  const directMatch = items.find((option) => normalizeText(option && option.id) === normalizedRaw);
+  const directMatch = items.find(
+    (option) => normalizeText(option && option.id) === normalizedRaw,
+  );
   if (directMatch) {
     return normalizeText(directMatch.id);
   }
 
   const labelMatch = items.find((option) => {
-    return normalizeText(option && option.name).toLowerCase() === normalizedRaw.toLowerCase();
+    return (
+      normalizeText(option && option.name).toLowerCase() ===
+      normalizedRaw.toLowerCase()
+    );
   });
 
   return labelMatch ? normalizeText(labelMatch.id) : null;
@@ -1821,7 +2098,9 @@ function findOptionId(options, rawValue) {
 function buildMappedCustomFieldBody(mapping, rawValue) {
   const fieldType = normalizeText(mapping && mapping.clickup_field_type);
   const typeConfig =
-    mapping && mapping.clickup_field_type_config && typeof mapping.clickup_field_type_config === "object"
+    mapping &&
+    mapping.clickup_field_type_config &&
+    typeof mapping.clickup_field_type_config === "object"
       ? mapping.clickup_field_type_config
       : {};
 
@@ -1877,7 +2156,11 @@ function buildMappedCustomFieldBody(mapping, rawValue) {
   return null;
 }
 
-async function applyMappedCustomFieldsToTask(taskId, fieldMappings, ticketCustomFields) {
+async function applyMappedCustomFieldsToTask(
+  taskId,
+  fieldMappings,
+  ticketCustomFields,
+) {
   const mappings = normalizeFieldMappings(fieldMappings);
   const customFields = normalizeTicketCustomFields(ticketCustomFields);
 
@@ -1904,16 +2187,16 @@ async function applyMappedCustomFieldsToTask(taskId, fieldMappings, ticketCustom
             task_id: normalizeText(taskId),
             field_id: mapping.clickup_field_id,
           },
-          requestBody
+          requestBody,
         ),
-        "Could not set ClickUp custom field."
+        "Could not set ClickUp custom field.",
       );
     } catch (error) {
       errors.push(
         `${mapping.freshdesk_field_key} -> ${mapping.clickup_field_id}: ${extractErrorMessage(
           error,
-          "Custom field sync failed."
-        )}`
+          "Custom field sync failed.",
+        )}`,
       );
     }
   }
@@ -1924,11 +2207,11 @@ async function applyMappedCustomFieldsToTask(taskId, fieldMappings, ticketCustom
 function isPrivateConversation(conversation) {
   return Boolean(
     conversation &&
-      (conversation._private ||
-        conversation.private ||
-        conversation.private_note ||
-        conversation.is_private ||
-        normalizeText(conversation.kind).toLowerCase() === "private_note")
+    (conversation._private ||
+      conversation.private ||
+      conversation.private_note ||
+      conversation.is_private ||
+      normalizeText(conversation.kind).toLowerCase() === "private_note"),
   );
 }
 
@@ -1941,7 +2224,9 @@ function isCustomerReplyActor(actor) {
     return false;
   }
 
-  const actorType = normalizeText(actor.type || actor.role || actor.user_type).toLowerCase();
+  const actorType = normalizeText(
+    actor.type || actor.role || actor.user_type,
+  ).toLowerCase();
   if (["agent", "support_agent", "admin"].includes(actorType)) {
     return false;
   }
@@ -1960,7 +2245,14 @@ function isCustomerReplyActor(actor) {
     return true;
   }
 
-  return ["requester", "requestor", "contact", "end_user", "customer", "user"].includes(actorType);
+  return [
+    "requester",
+    "requestor",
+    "contact",
+    "end_user",
+    "customer",
+    "user",
+  ].includes(actorType);
 }
 
 function isCustomerReplyConversation(payload) {
@@ -2011,7 +2303,12 @@ function isPublicNoteConversation(payload) {
     return true;
   }
 
-  return typeMarkers.some((value) => value.includes("public_note") || value === "note" || value.includes("note"));
+  return typeMarkers.some(
+    (value) =>
+      value.includes("public_note") ||
+      value === "note" ||
+      value.includes("note"),
+  );
 }
 
 function isForwardConversation(payload) {
@@ -2046,17 +2343,91 @@ function buildConversationText(conversation) {
   const bodyText =
     normalizeText(
       conversation &&
-        (
-          conversation.body_text ||
+        (conversation.body_text ||
           conversation.bodyText ||
           conversation.plain_text ||
-          (Array.isArray(fullText) ? fullText[0] : fullText)
-        )
+          (Array.isArray(fullText) ? fullText[0] : fullText)),
     ) ||
     stripHtml(conversation && conversation.body) ||
-    stripHtml(conversation && (Array.isArray(conversation.body_html) ? conversation.body_html[0] : conversation.body_html));
+    stripHtml(
+      conversation &&
+        (Array.isArray(conversation.body_html)
+          ? conversation.body_html[0]
+          : conversation.body_html),
+    );
 
   return bodyText;
+}
+
+function buildConversationFingerprint(value) {
+  return stripHtml(value).toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function buildConversationFingerprintFromPayload(payload) {
+  return buildConversationFingerprint(
+    buildConversationText(normalizeEventConversation(payload)),
+  );
+}
+
+function conversationFingerprintsMatch(storedFingerprint, eventFingerprint) {
+  const stored = buildConversationFingerprint(storedFingerprint);
+  const event = buildConversationFingerprint(eventFingerprint);
+
+  if (!stored || !event) {
+    return false;
+  }
+
+  return stored === event || stored.includes(event) || event.includes(stored);
+}
+
+function isKnownGeneratedFreshdeskConversation(payload) {
+  const text = buildConversationFingerprintFromPayload(payload);
+  if (!text) {
+    return false;
+  }
+
+  return [
+    "trello link ready",
+    "trello card moved",
+    "new trello comment",
+    "trello member update",
+    "trello labels changed",
+    "trello due date changed",
+    "trello attachment added",
+    "trello card archived",
+    "clickup comment",
+  ].some((marker) => text.includes(marker));
+}
+
+async function isSuppressedGeneratedConversation(
+  ticketId,
+  payload,
+  eventTimestamp,
+) {
+  const stored = await readSuppression(TICKET_SUPPRESS_PREFIX, ticketId);
+  if (!stored) {
+    return false;
+  }
+
+  const until = Number(stored && stored.until) || 0;
+  const comparisonTime = Number(eventTimestamp) || Date.now();
+  if (until <= comparisonTime) {
+    return false;
+  }
+
+  const storedFingerprint = normalizeText(
+    stored && stored.conversation_fingerprint,
+  );
+  if (!storedFingerprint) {
+    return isKnownGeneratedFreshdeskConversation(payload);
+  }
+
+  return (
+    conversationFingerprintsMatch(
+      storedFingerprint,
+      buildConversationFingerprintFromPayload(payload),
+    ) || isKnownGeneratedFreshdeskConversation(payload)
+  );
 }
 
 function buildPrivateNoteComment(payload) {
@@ -2070,7 +2441,9 @@ function buildPrivateNoteComment(payload) {
   }
 
   const actorName =
-    normalizeText(actor.name || actor.contact_name || actor.email || actor.username) || "Freshdesk agent";
+    normalizeText(
+      actor.name || actor.contact_name || actor.email || actor.username,
+    ) || "Freshdesk agent";
 
   return `[Freshdesk Private Note] Ticket #${ticket.id}${ticket.subject ? ` - ${ticket.subject}` : ""}\nBy: ${actorName}\n\n${noteText}`;
 }
@@ -2087,13 +2460,13 @@ function buildAgentReplyComment(payload) {
 
   const agentName =
     normalizeText(
-      actor.name ||
-        actor.contact_name ||
-        actor.email ||
-        actor.username
+      actor.name || actor.contact_name || actor.email || actor.username,
     ) || "Freshdesk agent";
   const agentEmail = normalizeText(actor.email);
-  const byLine = agentEmail && agentEmail !== agentName ? `${agentName} <${agentEmail}>` : agentName;
+  const byLine =
+    agentEmail && agentEmail !== agentName
+      ? `${agentName} <${agentEmail}>`
+      : agentName;
 
   return `[Freshdesk Agent Reply] Ticket #${ticket.id}${ticket.subject ? ` - ${ticket.subject}` : ""}\nBy: ${byLine}\n\n${replyText}`;
 }
@@ -2110,13 +2483,13 @@ function buildPublicNoteComment(payload) {
 
   const actorName =
     normalizeText(
-      actor.name ||
-        actor.contact_name ||
-        actor.email ||
-        actor.username
+      actor.name || actor.contact_name || actor.email || actor.username,
     ) || "Freshdesk agent";
   const actorEmail = normalizeText(actor.email);
-  const byLine = actorEmail && actorEmail !== actorName ? `${actorName} <${actorEmail}>` : actorName;
+  const byLine =
+    actorEmail && actorEmail !== actorName
+      ? `${actorName} <${actorEmail}>`
+      : actorName;
 
   return `[Freshdesk Public Note] Ticket #${ticket.id}${ticket.subject ? ` - ${ticket.subject}` : ""}\nBy: ${byLine}\n\n${noteText}`;
 }
@@ -2145,15 +2518,15 @@ async function syncStoredTasksWithTicket(ticketId, ticket, fieldMappings) {
           {
             task_id: normalizeText(task.task_id),
           },
-          updatePayload
+          updatePayload,
         ),
-        "Could not sync ClickUp task."
+        "Could not sync ClickUp task.",
       );
 
       const customFieldErrors = await applyMappedCustomFieldsToTask(
         task.task_id,
         fieldMappings,
-        ticket && ticket.custom_fields
+        ticket && ticket.custom_fields,
       );
 
       const syncedTask = applySyncedTicketDetails(task, ticket, syncTimestamp);
@@ -2193,21 +2566,31 @@ async function syncStoredCardsWithTicket(ticketId, ticket) {
     const task = stored.tasks[index];
 
     try {
-      await writeSuppression(TRELLO_CARD_SUPPRESS_PREFIX, task.task_id, SYNC_SUPPRESS_WINDOW_MS, {
-        source: "freshdesk_ticket_sync",
-      });
+      await writeSuppression(
+        TRELLO_CARD_SUPPRESS_PREFIX,
+        task.task_id,
+        SYNC_SUPPRESS_WINDOW_MS,
+        {
+          source: "freshdesk_ticket_sync",
+        },
+      );
       ensureSuccess(
         await invokeTemplate(
           "trello_card_update",
-          await buildTrelloRequestContext({
-            card_id: normalizeText(task.task_id),
-          }, trelloApiKey),
-          updatePayload
+          await buildTrelloRequestContext(
+            {
+              card_id: normalizeText(task.task_id),
+            },
+            trelloApiKey,
+          ),
+          updatePayload,
         ),
-        "Could not sync Trello card."
+        "Could not sync Trello card.",
       );
 
-      nextTasks.push(applySyncedTicketDetailsToCard(task, ticket, syncTimestamp));
+      nextTasks.push(
+        applySyncedTicketDetailsToCard(task, ticket, syncTimestamp),
+      );
     } catch (error) {
       nextTasks.push({
         ...task,
@@ -2238,9 +2621,9 @@ async function createFreshdeskNoteFromIparam(ticketId, bodyHtml, isPrivate) {
       {
         body: noteBody,
         private: Boolean(isPrivate),
-      }
+      },
     ),
-    "Could not add the Freshdesk note."
+    "Could not add the Freshdesk note.",
   );
 }
 
@@ -2255,14 +2638,17 @@ async function createTrelloCardComment(cardId, commentText, trelloApiKey) {
   ensureSuccess(
     await invokeTemplate(
       "trello_card_comment",
-      await buildTrelloRequestContext({
-        card_id: normalizedCardId,
-      }, trelloApiKey),
+      await buildTrelloRequestContext(
+        {
+          card_id: normalizedCardId,
+        },
+        trelloApiKey,
+      ),
       {
         text: normalizedComment,
-      }
+      },
     ),
-    "Could not add the Trello comment."
+    "Could not add the Trello comment.",
   );
 }
 
@@ -2275,10 +2661,10 @@ async function addMemberToTrelloCard(cardId, memberId, trelloApiKey) {
           card_id: normalizeText(cardId),
           value: normalizeText(memberId),
         },
-        trelloApiKey
-      )
+        trelloApiKey,
+      ),
     ),
-    "Could not assign the Trello member."
+    "Could not assign the Trello member.",
   );
 }
 
@@ -2291,37 +2677,59 @@ async function addLabelToTrelloCard(cardId, labelId, trelloApiKey) {
           card_id: normalizeText(cardId),
           value: normalizeText(labelId),
         },
-        trelloApiKey
-      )
+        trelloApiKey,
+      ),
     ),
-    "Could not add the Trello label."
+    "Could not add the Trello label.",
   );
 }
 
-async function applySelectionsToTrelloCard(cardId, memberIds, labelIds, trelloApiKey) {
+async function applySelectionsToTrelloCard(
+  cardId,
+  memberIds,
+  labelIds,
+  trelloApiKey,
+) {
   const errors = [];
   const normalizedCardId = normalizeText(cardId);
 
   for (let index = 0; index < memberIds.length; index += 1) {
     try {
-      await addMemberToTrelloCard(normalizedCardId, memberIds[index], trelloApiKey);
+      await addMemberToTrelloCard(
+        normalizedCardId,
+        memberIds[index],
+        trelloApiKey,
+      );
     } catch (error) {
-      errors.push(`member ${normalizeText(memberIds[index])}: ${extractErrorMessage(error, "Member assignment failed.")}`);
+      errors.push(
+        `member ${normalizeText(memberIds[index])}: ${extractErrorMessage(error, "Member assignment failed.")}`,
+      );
     }
   }
 
   for (let index = 0; index < labelIds.length; index += 1) {
     try {
-      await addLabelToTrelloCard(normalizedCardId, labelIds[index], trelloApiKey);
+      await addLabelToTrelloCard(
+        normalizedCardId,
+        labelIds[index],
+        trelloApiKey,
+      );
     } catch (error) {
-      errors.push(`label ${normalizeText(labelIds[index])}: ${extractErrorMessage(error, "Label assignment failed.")}`);
+      errors.push(
+        `label ${normalizeText(labelIds[index])}: ${extractErrorMessage(error, "Label assignment failed.")}`,
+      );
     }
   }
 
   return errors;
 }
 
-async function syncCommentToStoredCards(ticketId, commentText, failureMessage, trelloApiKey) {
+async function syncCommentToStoredCards(
+  ticketId,
+  commentText,
+  failureMessage,
+  trelloApiKey,
+) {
   const stored = await readTicketLinks(ticketId);
   if (!stored.tasks.length || !commentText) {
     return stored.tasks;
@@ -2334,9 +2742,14 @@ async function syncCommentToStoredCards(ticketId, commentText, failureMessage, t
     const task = stored.tasks[index];
 
     try {
-      await writeSuppression(TRELLO_CARD_SUPPRESS_PREFIX, task.task_id, SYNC_SUPPRESS_WINDOW_MS, {
-        source: "freshdesk_to_trello_comment_sync",
-      });
+      await writeSuppression(
+        TRELLO_CARD_SUPPRESS_PREFIX,
+        task.task_id,
+        SYNC_SUPPRESS_WINDOW_MS,
+        {
+          source: "freshdesk_to_trello_comment_sync",
+        },
+      );
       await createTrelloCardComment(task.task_id, commentText, trelloApiKey);
       nextTasks.push({
         ...task,
@@ -2371,7 +2784,20 @@ function formatDueDateDisplay(value) {
   const monthIndex = parseInt(isoMatch[2], 10) - 1;
   const day = parseInt(isoMatch[3], 10);
 
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const dow = dayNames[new Date(Date.UTC(year, monthIndex, day)).getUTCDay()];
 
@@ -2379,7 +2805,10 @@ function formatDueDateDisplay(value) {
 }
 
 function buildTrelloCardAnchor(taskRecord, fallbackName) {
-  const cardName = normalizeText(taskRecord && taskRecord.task_name) || normalizeText(fallbackName) || "linked Trello card";
+  const cardName =
+    normalizeText(taskRecord && taskRecord.task_name) ||
+    normalizeText(fallbackName) ||
+    "linked Trello card";
   const cardUrl = normalizeText(taskRecord && taskRecord.task_url);
 
   if (!cardUrl) {
@@ -2391,16 +2820,35 @@ function buildTrelloCardAnchor(taskRecord, fallbackName) {
 
 function getTrelloColorActual(color) {
   const palette = {
-    green: "#61bd4f", yellow: "#f2d600", orange: "#ff9f1a", red: "#eb5a46",
-    purple: "#c377e0", blue: "#0079bf", sky: "#00c2e0", lime: "#51e898",
-    pink: "#ff78cb", black: "#344563",
-    green_dark: "#519839", yellow_dark: "#d9b51c", orange_dark: "#d17711",
-    red_dark: "#b04632", purple_dark: "#89609e", blue_dark: "#055a8c",
-    sky_dark: "#0098b7", lime_dark: "#4bbf6b", pink_dark: "#e06ba2",
+    green: "#61bd4f",
+    yellow: "#f2d600",
+    orange: "#ff9f1a",
+    red: "#eb5a46",
+    purple: "#c377e0",
+    blue: "#0079bf",
+    sky: "#00c2e0",
+    lime: "#51e898",
+    pink: "#ff78cb",
+    black: "#344563",
+    green_dark: "#519839",
+    yellow_dark: "#d9b51c",
+    orange_dark: "#d17711",
+    red_dark: "#b04632",
+    purple_dark: "#89609e",
+    blue_dark: "#055a8c",
+    sky_dark: "#0098b7",
+    lime_dark: "#4bbf6b",
+    pink_dark: "#e06ba2",
     black_dark: "#1d2d44",
-    green_light: "#b7ddb0", yellow_light: "#f5ea92", orange_light: "#fad29c",
-    red_light: "#efb3ab", purple_light: "#dfc0eb", blue_light: "#8bbdd9",
-    sky_light: "#8fdfeb", lime_light: "#b3f1d0", pink_light: "#f9c2e4",
+    green_light: "#b7ddb0",
+    yellow_light: "#f5ea92",
+    orange_light: "#fad29c",
+    red_light: "#efb3ab",
+    purple_light: "#dfc0eb",
+    blue_light: "#8bbdd9",
+    sky_light: "#8fdfeb",
+    lime_light: "#b3f1d0",
+    pink_light: "#f9c2e4",
     black_light: "#b6bfcb",
   };
 
@@ -2424,20 +2872,44 @@ function getReadableTextColor(backgroundHex) {
 function formatTrelloColorName(color) {
   const normalized = normalizeText(color).toLowerCase();
   const names = {
-    green: "Green", yellow: "Yellow", orange: "Orange", red: "Red",
-    purple: "Purple", blue: "Blue", sky: "Sky", lime: "Lime",
-    pink: "Pink", black: "Black",
-    green_dark: "Dark Green", yellow_dark: "Dark Yellow", orange_dark: "Dark Orange",
-    red_dark: "Dark Red", purple_dark: "Dark Purple", blue_dark: "Dark Blue",
-    sky_dark: "Dark Sky", lime_dark: "Dark Lime", pink_dark: "Dark Pink",
+    green: "Green",
+    yellow: "Yellow",
+    orange: "Orange",
+    red: "Red",
+    purple: "Purple",
+    blue: "Blue",
+    sky: "Sky",
+    lime: "Lime",
+    pink: "Pink",
+    black: "Black",
+    green_dark: "Dark Green",
+    yellow_dark: "Dark Yellow",
+    orange_dark: "Dark Orange",
+    red_dark: "Dark Red",
+    purple_dark: "Dark Purple",
+    blue_dark: "Dark Blue",
+    sky_dark: "Dark Sky",
+    lime_dark: "Dark Lime",
+    pink_dark: "Dark Pink",
     black_dark: "Dark Black",
-    green_light: "Light Green", yellow_light: "Light Yellow", orange_light: "Light Orange",
-    red_light: "Light Red", purple_light: "Light Purple", blue_light: "Light Blue",
-    sky_light: "Light Sky", lime_light: "Light Lime", pink_light: "Light Pink",
+    green_light: "Light Green",
+    yellow_light: "Light Yellow",
+    orange_light: "Light Orange",
+    red_light: "Light Red",
+    purple_light: "Light Purple",
+    blue_light: "Light Blue",
+    sky_light: "Light Sky",
+    lime_light: "Light Lime",
+    pink_light: "Light Pink",
     black_light: "Light Black",
   };
 
-  return names[normalized] || (normalized ? `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}` : "");
+  return (
+    names[normalized] ||
+    (normalized
+      ? `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}`
+      : "")
+  );
 }
 
 function formatTrelloLabelDisplayName(label) {
@@ -2456,8 +2928,10 @@ function labelsMatch(left, right) {
   }
 
   return (
-    normalizeText(left && left.name).toLowerCase() === normalizeText(right && right.name).toLowerCase() &&
-    normalizeText(left && left.color).toLowerCase() === normalizeText(right && right.color).toLowerCase()
+    normalizeText(left && left.name).toLowerCase() ===
+      normalizeText(right && right.name).toLowerCase() &&
+    normalizeText(left && left.color).toLowerCase() ===
+      normalizeText(right && right.color).toLowerCase()
   );
 }
 
@@ -2467,7 +2941,9 @@ function upsertTrelloLabel(labels, label) {
     return normalizeTrelloLabels(labels);
   }
 
-  const filtered = normalizeTrelloLabels(labels).filter((item) => !labelsMatch(item, normalizedLabel));
+  const filtered = normalizeTrelloLabels(labels).filter(
+    (item) => !labelsMatch(item, normalizedLabel),
+  );
   return filtered.concat(normalizedLabel);
 }
 
@@ -2477,7 +2953,9 @@ function removeTrelloLabel(labels, label) {
     return normalizeTrelloLabels(labels);
   }
 
-  return normalizeTrelloLabels(labels).filter((item) => !labelsMatch(item, normalizedLabel));
+  return normalizeTrelloLabels(labels).filter(
+    (item) => !labelsMatch(item, normalizedLabel),
+  );
 }
 
 function getTrelloLabelsFromWebhookPayload(payload, taskRecord) {
@@ -2517,11 +2995,13 @@ function buildTrelloLabelFingerprint(labels) {
   }
 
   return normalizedLabels
-    .map((label) => [
-      normalizeText(label && label.id),
-      normalizeText(label && label.name).toLowerCase(),
-      normalizeText(label && label.color).toLowerCase(),
-    ].join(":"))
+    .map((label) =>
+      [
+        normalizeText(label && label.id),
+        normalizeText(label && label.name).toLowerCase(),
+        normalizeText(label && label.color).toLowerCase(),
+      ].join(":"),
+    )
     .sort()
     .join("|");
 }
@@ -2544,7 +3024,10 @@ function renderTrelloLabelBlocks(labels) {
 function buildTrelloTicketLinkedNoteBody(ticket, taskRecord) {
   const ticketId = normalizeText(ticket && ticket.id);
   const subject = normalizeText(ticket && ticket.subject);
-  const location = [taskRecord && taskRecord.workspace_name, taskRecord && taskRecord.list_name]
+  const location = [
+    taskRecord && taskRecord.workspace_name,
+    taskRecord && taskRecord.list_name,
+  ]
     .map(normalizeText)
     .filter(Boolean)
     .join(" / ");
@@ -2570,13 +3053,13 @@ function buildForwardComment(payload) {
 
   const actorName =
     normalizeText(
-      actor.name ||
-        actor.contact_name ||
-        actor.email ||
-        actor.username
+      actor.name || actor.contact_name || actor.email || actor.username,
     ) || "Freshdesk agent";
   const actorEmail = normalizeText(actor.email);
-  const byLine = actorEmail && actorEmail !== actorName ? `${actorName} <${actorEmail}>` : actorName;
+  const byLine =
+    actorEmail && actorEmail !== actorName
+      ? `${actorName} <${actorEmail}>`
+      : actorName;
   const recipientSentence = buildForwardRecipientSentence(payload);
 
   return `[Freshdesk Forward] Ticket #${ticket.id}${ticket.subject ? ` - ${ticket.subject}` : ""}\nBy: ${byLine}\n${recipientSentence}\n\n${forwardText}`;
@@ -2585,11 +3068,15 @@ function buildForwardComment(payload) {
 function buildFreshdeskTicketLinkedComment(ticket) {
   const ticketId = normalizeText(ticket && ticket.id);
   const subject = normalizeText(ticket && ticket.subject);
-  const ticketUrl = normalizeText(ticket && (ticket.url || ticket.ticket_url || ticket.ticketUrl));
+  const ticketUrl = normalizeText(
+    ticket && (ticket.url || ticket.ticket_url || ticket.ticketUrl),
+  );
+  const description = normalizeText(ticket && ticket.description_text);
 
   return [
     `[Freshdesk Link] Ticket #${ticketId || "unknown"}${subject ? ` - ${subject}` : ""} is now connected to this card.`,
     ticketUrl ? `Freshdesk Ticket URL: ${ticketUrl}` : "",
+    description ? `Ticket summary:\n${description}` : "",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -2607,12 +3094,14 @@ function normalizeEmailRecipientList(value) {
       values
         .map((item) => {
           if (item && typeof item === "object") {
-            return normalizeText(item.email || item.address || item.value || item.name);
+            return normalizeText(
+              item.email || item.address || item.value || item.name,
+            );
           }
           return normalizeText(item).replace(/^["']|["']$/g, "");
         })
-        .filter(Boolean)
-    )
+        .filter(Boolean),
+    ),
   );
 }
 
@@ -2634,7 +3123,10 @@ function getFirstRecipientList(source, keys) {
 function buildForwardRecipientSentence(payload) {
   const conversation = normalizeEventConversation(payload);
   const ticket = normalizeEventTicket(payload);
-  const data = payload && payload.data && typeof payload.data === "object" ? payload.data : {};
+  const data =
+    payload && payload.data && typeof payload.data === "object"
+      ? payload.data
+      : {};
 
   const sources = [
     conversation,
@@ -2646,13 +3138,51 @@ function buildForwardRecipientSentence(payload) {
     ticket,
   ];
 
-  const toKeys = ["to", "to_email", "to_emails", "toEmail", "toEmails", "forward_to", "forwarded_to", "recipient", "recipients"];
-  const ccKeys = ["cc", "cc_email", "cc_emails", "ccEmail", "ccEmails", "forward_cc", "cc_recipients"];
-  const bccKeys = ["bcc", "bcc_email", "bcc_emails", "bccEmail", "bccEmails", "forward_bcc", "bcc_recipients"];
+  const toKeys = [
+    "to",
+    "to_email",
+    "to_emails",
+    "toEmail",
+    "toEmails",
+    "forward_to",
+    "forwarded_to",
+    "recipient",
+    "recipients",
+  ];
+  const ccKeys = [
+    "cc",
+    "cc_email",
+    "cc_emails",
+    "ccEmail",
+    "ccEmails",
+    "forward_cc",
+    "cc_recipients",
+  ];
+  const bccKeys = [
+    "bcc",
+    "bcc_email",
+    "bcc_emails",
+    "bccEmail",
+    "bccEmails",
+    "forward_bcc",
+    "bcc_recipients",
+  ];
 
-  const to = sources.reduce((found, source) => found.length ? found : getFirstRecipientList(source, toKeys), []);
-  const cc = sources.reduce((found, source) => found.length ? found : getFirstRecipientList(source, ccKeys), []);
-  const bcc = sources.reduce((found, source) => found.length ? found : getFirstRecipientList(source, bccKeys), []);
+  const to = sources.reduce(
+    (found, source) =>
+      found.length ? found : getFirstRecipientList(source, toKeys),
+    [],
+  );
+  const cc = sources.reduce(
+    (found, source) =>
+      found.length ? found : getFirstRecipientList(source, ccKeys),
+    [],
+  );
+  const bcc = sources.reduce(
+    (found, source) =>
+      found.length ? found : getFirstRecipientList(source, bccKeys),
+    [],
+  );
 
   if (!to.length && !cc.length && !bcc.length) {
     return "Ticket has been forwarded.";
@@ -2674,7 +3204,9 @@ function buildForwardRecipientSentence(payload) {
 
 function getTrelloWebhookAction(payload) {
   const external = extractExternalPayload(payload);
-  return external && external.action && typeof external.action === "object" ? external.action : null;
+  return external && external.action && typeof external.action === "object"
+    ? external.action
+    : null;
 }
 
 function isTrelloWebhookPayload(payload) {
@@ -2719,12 +3251,17 @@ function getTrelloWebhookEventKey(payload) {
   const model = external && external.model ? external.model : {};
   const type = normalizeText(action.type);
   const nextClosedValue =
-    data && data.card && Object.prototype.hasOwnProperty.call(data.card, "closed")
+    data &&
+    data.card &&
+    Object.prototype.hasOwnProperty.call(data.card, "closed")
       ? data.card.closed
       : model && Object.prototype.hasOwnProperty.call(model, "closed")
-      ? model.closed
-      : undefined;
-  const nextClosed = nextClosedValue === undefined ? false : normalizeBoolean(nextClosedValue, false);
+        ? model.closed
+        : undefined;
+  const nextClosed =
+    nextClosedValue === undefined
+      ? false
+      : normalizeBoolean(nextClosedValue, false);
 
   if (type === "commentCard") {
     return "card_comment_added";
@@ -2777,26 +3314,35 @@ function getTrelloWebhookEventKey(payload) {
 function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
   const action = getTrelloWebhookAction(payload) || {};
   const data = action && action.data ? action.data : {};
-  const memberCreator = action && action.memberCreator ? action.memberCreator : {};
+  const memberCreator =
+    action && action.memberCreator ? action.memberCreator : {};
   const actorName =
-    normalizeText(memberCreator.fullName || memberCreator.username || memberCreator.name) || "Trello user";
-  const cardLabel = buildTrelloCardAnchor(taskRecord, data && data.card && data.card.name);
+    normalizeText(
+      memberCreator.fullName || memberCreator.username || memberCreator.name,
+    ) || "Trello user";
+  const cardLabel = buildTrelloCardAnchor(
+    taskRecord,
+    data && data.card && data.card.name,
+  );
 
   switch (eventKey) {
     case "card_moved": {
-      const fromList = normalizeText(data && data.listBefore && data.listBefore.name);
+      const fromList = normalizeText(
+        data && data.listBefore && data.listBefore.name,
+      );
       const toList =
         normalizeText(data && data.listAfter && data.listAfter.name) ||
         normalizeText(data && data.list && data.list.name) ||
         normalizeText(taskRecord && taskRecord.list_name);
 
-      const moveDetail = fromList && toList
-        ? `<br /><strong style="color:#c0392b;">${escapeHtml(fromList)}</strong> &rarr; <strong style="color:#27ae60;">${escapeHtml(toList)}</strong>`
-        : toList
-        ? ` to <strong style="color:#27ae60;">${escapeHtml(toList)}</strong>`
-        : fromList
-        ? ` from <strong style="color:#c0392b;">${escapeHtml(fromList)}</strong>`
-        : "";
+      const moveDetail =
+        fromList && toList
+          ? `<br /><strong style="color:#c0392b;">${escapeHtml(fromList)}</strong> &rarr; <strong style="color:#27ae60;">${escapeHtml(toList)}</strong>`
+          : toList
+            ? ` to <strong style="color:#27ae60;">${escapeHtml(toList)}</strong>`
+            : fromList
+              ? ` from <strong style="color:#c0392b;">${escapeHtml(fromList)}</strong>`
+              : "";
 
       return [
         `<p><strong>🚀 Trello card moved</strong></p>`,
@@ -2804,11 +3350,16 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
       ].join("");
     }
     case "card_comment_added": {
-      const commentText = escapeHtml(normalizeText(data && data.text)).replace(/\n/g, "<br />");
+      const commentText = escapeHtml(normalizeText(data && data.text)).replace(
+        /\n/g,
+        "<br />",
+      );
       return [
         `<p><strong>💬 New Trello comment</strong> on ${cardLabel}</p>`,
         `<p>Added by <strong style="color:#2980b9;">${escapeHtml(actorName)}</strong>.</p>`,
-        commentText ? `<p style="border-left:3px solid #3498db; padding-left:8px; color:#555;">${commentText}</p>` : "",
+        commentText
+          ? `<p style="border-left:3px solid #3498db; padding-left:8px; color:#555;">${commentText}</p>`
+          : "",
       ]
         .filter(Boolean)
         .join("");
@@ -2816,8 +3367,16 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
     case "card_member_added": {
       const addedMember =
         normalizeText(
-          (action && action.member && (action.member.fullName || action.member.username || action.member.name)) ||
-            (data && data.member && (data.member.fullName || data.member.username || data.member.name))
+          (action &&
+            action.member &&
+            (action.member.fullName ||
+              action.member.username ||
+              action.member.name)) ||
+            (data &&
+              data.member &&
+              (data.member.fullName ||
+                data.member.username ||
+                data.member.name)),
         ) || "a Trello member";
 
       return [
@@ -2828,8 +3387,9 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
     case "card_labels_updated": {
       const labels = getTrelloLabelsFromWebhookPayload(payload, taskRecord);
       const labelName =
-        normalizeText(data && data.label && (data.label.name || data.label.color)) ||
-        normalizeText(data && data.text);
+        normalizeText(
+          data && data.label && (data.label.name || data.label.color),
+        ) || normalizeText(data && data.text);
 
       return [
         `<p><strong>🏷️ Trello labels changed</strong></p>`,
@@ -2839,16 +3399,25 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
       ].join("");
     }
     case "card_due_date_updated": {
-      const oldDueRaw = data && data.old && Object.prototype.hasOwnProperty.call(data.old, "due") ? data.old.due : undefined;
-      const oldDue = oldDueRaw !== undefined ? (formatDueDateDisplay(oldDueRaw) || "No due date") : null;
+      const oldDueRaw =
+        data &&
+        data.old &&
+        Object.prototype.hasOwnProperty.call(data.old, "due")
+          ? data.old.due
+          : undefined;
+      const oldDue =
+        oldDueRaw !== undefined
+          ? formatDueDateDisplay(oldDueRaw) || "No due date"
+          : null;
       const newDue =
         formatDueDateDisplay(data && data.card && data.card.due) ||
         formatDueDateDisplay(taskRecord && taskRecord.due_date) ||
         "No due date";
 
-      const dueLine = oldDue !== null
-        ? `<strong style="color:#c0392b;">${escapeHtml(oldDue)}</strong> &rarr; <strong style="color:#27ae60;">${escapeHtml(newDue)}</strong>`
-        : `<strong style="color:#27ae60;">${escapeHtml(newDue)}</strong>`;
+      const dueLine =
+        oldDue !== null
+          ? `<strong style="color:#c0392b;">${escapeHtml(oldDue)}</strong> &rarr; <strong style="color:#27ae60;">${escapeHtml(newDue)}</strong>`
+          : `<strong style="color:#27ae60;">${escapeHtml(newDue)}</strong>`;
 
       return [
         `<p><strong>📅 Trello due date changed</strong></p>`,
@@ -2858,7 +3427,11 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
     }
     case "card_attachment_added": {
       const attachmentName =
-        normalizeText(data && data.attachment && (data.attachment.name || data.attachment.url)) || "an attachment";
+        normalizeText(
+          data &&
+            data.attachment &&
+            (data.attachment.name || data.attachment.url),
+        ) || "an attachment";
       return [
         `<p><strong>📎 Trello attachment added</strong></p>`,
         `<p><strong style="color:#2980b9;">${escapeHtml(actorName)}</strong> attached <strong style="color:#16a085;">${escapeHtml(attachmentName)}</strong> to ${cardLabel}.</p>`,
@@ -2874,7 +3447,13 @@ function buildTrelloWebhookNoteBody(eventKey, payload, taskRecord) {
   }
 }
 
-function buildTrelloTaskFromWebhookPayload(taskRecord, payload, syncTimestamp, syncError, eventId) {
+function buildTrelloTaskFromWebhookPayload(
+  taskRecord,
+  payload,
+  syncTimestamp,
+  syncError,
+  eventId,
+) {
   const action = getTrelloWebhookAction(payload) || {};
   const external = extractExternalPayload(payload);
   const data = action && action.data ? action.data : {};
@@ -2882,51 +3461,74 @@ function buildTrelloTaskFromWebhookPayload(taskRecord, payload, syncTimestamp, s
   const meta = buildTrelloTaskMetaFromStoredRecord(taskRecord);
   const labels = getTrelloLabelsFromWebhookPayload(payload, taskRecord);
 
-  const nextRecord = normalizeTrelloCardRecord(
-    {
-      id: normalizeText((data && data.card && data.card.id) || model.id || taskRecord && taskRecord.task_id),
-      name: normalizeText((data && data.card && data.card.name) || model.name || taskRecord && taskRecord.task_name),
-      url:
-        normalizeText(model && model.url) ||
-        normalizeText(taskRecord && taskRecord.task_url) ||
-        (normalizeText(model && model.shortLink)
-          ? `https://trello.com/c/${normalizeText(model.shortLink)}`
-          : ""),
-      due:
-        normalizeText(model && model.due) ||
-        normalizeText(data && data.card && data.card.due) ||
-        normalizeText(taskRecord && taskRecord.due_date),
-      closed:
-        typeof (model && model.closed) === "boolean"
-          ? model.closed
-          : typeof (data && data.card && data.card.closed) === "boolean"
-          ? data.card.closed
-          : normalizeText(taskRecord && taskRecord.status).toLowerCase() === "archived",
-      idList:
-        normalizeText((data && data.listAfter && data.listAfter.id) || (data && data.list && data.list.id)) ||
-        normalizeText(model && model.idList) ||
-        meta.list_id,
-      labels,
-    },
-    {
-      ...meta,
-      labels,
-      workspace_id: normalizeText((data && data.board && data.board.id) || meta.workspace_id),
-      workspace_name: normalizeText((data && data.board && data.board.name) || meta.workspace_name),
-      list_id:
-        normalizeText((data && data.listAfter && data.listAfter.id) || (data && data.list && data.list.id)) ||
-        meta.list_id,
-      list_name:
-        normalizeText((data && data.listAfter && data.listAfter.name) || (data && data.list && data.list.name)) ||
-        meta.list_name,
-    }
-  ) || taskRecord;
+  const nextRecord =
+    normalizeTrelloCardRecord(
+      {
+        id: normalizeText(
+          (data && data.card && data.card.id) ||
+            model.id ||
+            (taskRecord && taskRecord.task_id),
+        ),
+        name: normalizeText(
+          (data && data.card && data.card.name) ||
+            model.name ||
+            (taskRecord && taskRecord.task_name),
+        ),
+        url:
+          normalizeText(model && model.url) ||
+          normalizeText(taskRecord && taskRecord.task_url) ||
+          (normalizeText(model && model.shortLink)
+            ? `https://trello.com/c/${normalizeText(model.shortLink)}`
+            : ""),
+        due:
+          normalizeText(model && model.due) ||
+          normalizeText(data && data.card && data.card.due) ||
+          normalizeText(taskRecord && taskRecord.due_date),
+        closed:
+          typeof (model && model.closed) === "boolean"
+            ? model.closed
+            : typeof (data && data.card && data.card.closed) === "boolean"
+              ? data.card.closed
+              : normalizeText(taskRecord && taskRecord.status).toLowerCase() ===
+                "archived",
+        idList:
+          normalizeText(
+            (data && data.listAfter && data.listAfter.id) ||
+              (data && data.list && data.list.id),
+          ) ||
+          normalizeText(model && model.idList) ||
+          meta.list_id,
+        labels,
+      },
+      {
+        ...meta,
+        labels,
+        workspace_id: normalizeText(
+          (data && data.board && data.board.id) || meta.workspace_id,
+        ),
+        workspace_name: normalizeText(
+          (data && data.board && data.board.name) || meta.workspace_name,
+        ),
+        list_id:
+          normalizeText(
+            (data && data.listAfter && data.listAfter.id) ||
+              (data && data.list && data.list.id),
+          ) || meta.list_id,
+        list_name:
+          normalizeText(
+            (data && data.listAfter && data.listAfter.name) ||
+              (data && data.list && data.list.name),
+          ) || meta.list_name,
+      },
+    ) || taskRecord;
 
   return {
     ...taskRecord,
     ...nextRecord,
     synced_comment_ids: eventId
-      ? normalizeStringList(getStoredTaskCommentIds(taskRecord).concat(normalizeText(eventId)))
+      ? normalizeStringList(
+          getStoredTaskCommentIds(taskRecord).concat(normalizeText(eventId)),
+        )
       : getStoredTaskCommentIds(taskRecord),
     last_synced_at: syncTimestamp,
     last_sync_error: normalizeText(syncError),
@@ -2935,22 +3537,37 @@ function buildTrelloTaskFromWebhookPayload(taskRecord, payload, syncTimestamp, s
 
 async function applyLinkedCardNotifications(ticket, cardRecord, settings) {
   const errors = [];
-  const freshdeskAction = getTrelloToFreshdeskNotificationAction(settings, "ticket_linked");
-  const trelloAction = getFreshdeskToTrelloNotificationAction(settings, "ticket_linked");
+  const freshdeskAction = getTrelloToFreshdeskNotificationAction(
+    settings,
+    "ticket_linked",
+  );
+  const trelloAction = getFreshdeskToTrelloNotificationAction(
+    settings,
+    "ticket_linked",
+  );
   const trelloApiKey = resolveTrelloApiKey(settings && settings.trello_api_key);
 
   if (freshdeskAction !== "none") {
     try {
-      await writeSuppression(TICKET_SUPPRESS_PREFIX, ticket && ticket.id, SYNC_SUPPRESS_WINDOW_MS, {
-        source: "trello_ticket_linked_note",
-      });
+      const noteBody = buildTrelloTicketLinkedNoteBody(ticket, cardRecord);
+      await writeSuppression(
+        TICKET_SUPPRESS_PREFIX,
+        ticket && ticket.id,
+        SYNC_SUPPRESS_WINDOW_MS,
+        {
+          source: "trello_ticket_linked_note",
+          conversation_fingerprint: buildConversationFingerprint(noteBody),
+        },
+      );
       await createFreshdeskNoteFromIparam(
         ticket && ticket.id,
-        buildTrelloTicketLinkedNoteBody(ticket, cardRecord),
-        freshdeskAction === "private_note_notify"
+        noteBody,
+        freshdeskAction === "private_note_notify",
       );
     } catch (error) {
-      errors.push(`Freshdesk link note: ${extractErrorMessage(error, "Linked-card note failed.")}`);
+      errors.push(
+        `Freshdesk link note: ${extractErrorMessage(error, "Linked-card note failed.")}`,
+      );
     }
   }
 
@@ -2959,10 +3576,12 @@ async function applyLinkedCardNotifications(ticket, cardRecord, settings) {
       await createTrelloCardComment(
         cardRecord && cardRecord.task_id,
         buildFreshdeskTicketLinkedComment(ticket),
-        trelloApiKey
+        trelloApiKey,
       );
     } catch (error) {
-      errors.push(`Trello link comment: ${extractErrorMessage(error, "Linked-card comment failed.")}`);
+      errors.push(
+        `Trello link comment: ${extractErrorMessage(error, "Linked-card comment failed.")}`,
+      );
     }
   }
 
@@ -2980,11 +3599,17 @@ function getClickupCommentFromEvent(payload) {
     return external.comment_data;
   }
 
-  if (looksLikeClickupComment(external && external.history_item && external.history_item.comment)) {
+  if (
+    looksLikeClickupComment(
+      external && external.history_item && external.history_item.comment,
+    )
+  ) {
     return external.history_item.comment;
   }
 
-  const historyItems = Array.isArray(external && external.history_items) ? external.history_items : [];
+  const historyItems = Array.isArray(external && external.history_items)
+    ? external.history_items
+    : [];
 
   for (let index = 0; index < historyItems.length; index += 1) {
     const item = historyItems[index];
@@ -2992,7 +3617,10 @@ function getClickupCommentFromEvent(payload) {
       return item.comment;
     }
 
-    if (normalizeText(item && item.field) === "comment" && looksLikeClickupComment(item && item.after)) {
+    if (
+      normalizeText(item && item.field) === "comment" &&
+      looksLikeClickupComment(item && item.after)
+    ) {
       return item.after;
     }
 
@@ -3006,7 +3634,9 @@ function getClickupCommentFromEvent(payload) {
 
 function summarizeClickupExternalPayload(payload) {
   const external = extractExternalPayload(payload);
-  const historyItems = Array.isArray(external && external.history_items) ? external.history_items : [];
+  const historyItems = Array.isArray(external && external.history_items)
+    ? external.history_items
+    : [];
 
   return {
     top_level_keys: Object.keys(external || {}).slice(0, 20),
@@ -3016,12 +3646,22 @@ function summarizeClickupExternalPayload(payload) {
       .map((item) => normalizeText(item && item.field))
       .filter(Boolean),
     has_comment: looksLikeClickupComment(external && external.comment),
-    has_comment_data: looksLikeClickupComment(external && external.comment_data),
-    has_history_item_comment: looksLikeClickupComment(external && external.history_item && external.history_item.comment),
+    has_comment_data: looksLikeClickupComment(
+      external && external.comment_data,
+    ),
+    has_history_item_comment: looksLikeClickupComment(
+      external && external.history_item && external.history_item.comment,
+    ),
   };
 }
 
-async function createFreshdeskNote(domain, encodedAuth, ticketId, bodyHtml, isPrivate) {
+async function createFreshdeskNote(
+  domain,
+  encodedAuth,
+  ticketId,
+  bodyHtml,
+  isPrivate,
+) {
   const noteBody = normalizeText(bodyHtml);
   if (!noteBody) {
     return;
@@ -3038,9 +3678,9 @@ async function createFreshdeskNote(domain, encodedAuth, ticketId, bodyHtml, isPr
       {
         body: noteBody,
         private: Boolean(isPrivate),
-      }
+      },
     ),
-    "Could not add the Freshdesk note."
+    "Could not add the Freshdesk note.",
   );
 }
 
@@ -3049,7 +3689,9 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
   const taskLinks = await readTaskLinks(normalizedTaskId);
 
   if (!taskLinks.ticket_ids.length) {
-    console.log(`[ClickUp->Freshdesk] No linked tickets found for task ${normalizedTaskId}.`);
+    console.log(
+      `[ClickUp->Freshdesk] No linked tickets found for task ${normalizedTaskId}.`,
+    );
     return [];
   }
 
@@ -3062,7 +3704,9 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
 
   const commentSyncMode = resolveClickupCommentSyncMode(settings);
   if (commentSyncMode === "none") {
-    console.log(`[ClickUp->Freshdesk] Ignoring task ${normalizedTaskId} because ClickUp comment sync is disabled in settings.`);
+    console.log(
+      `[ClickUp->Freshdesk] Ignoring task ${normalizedTaskId} because ClickUp comment sync is disabled in settings.`,
+    );
     return [];
   }
 
@@ -3071,7 +3715,7 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
       clickup_token: clickupToken,
       task_id: normalizedTaskId,
     }),
-    "Could not load the updated ClickUp task."
+    "Could not load the updated ClickUp task.",
   );
 
   const syncTimestamp = new Date().toISOString();
@@ -3079,19 +3723,21 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
   const results = [];
 
   if (!eventComment) {
-    console.log(`[ClickUp->Freshdesk] Event for task ${normalizedTaskId} did not include a comment payload.`);
+    console.log(
+      `[ClickUp->Freshdesk] Event for task ${normalizedTaskId} did not include a comment payload.`,
+    );
     return results;
   }
 
   if (isFreshdeskMirroredClickupComment(eventComment)) {
     console.log(
-      `[ClickUp->Freshdesk] Ignoring comment ${normalizeText(eventComment.id)} for task ${normalizedTaskId} because it was mirrored from Freshdesk.`
+      `[ClickUp->Freshdesk] Ignoring comment ${normalizeText(eventComment.id)} for task ${normalizedTaskId} because it was mirrored from Freshdesk.`,
     );
     return results;
   }
 
   console.log(
-    `[ClickUp->Freshdesk] Processing comment ${normalizeText(eventComment.id)} for task ${normalizedTaskId} across ${taskLinks.ticket_ids.length} linked ticket(s).`
+    `[ClickUp->Freshdesk] Processing comment ${normalizeText(eventComment.id)} for task ${normalizedTaskId} across ${taskLinks.ticket_ids.length} linked ticket(s).`,
   );
 
   for (let index = 0; index < taskLinks.ticket_ids.length; index += 1) {
@@ -3099,7 +3745,9 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
     const stored = await readTicketLinks(ticketId);
 
     if (!stored.tasks.length) {
-      console.log(`[ClickUp->Freshdesk] Ticket ${ticketId} no longer has stored task links. Skipping.`);
+      console.log(
+        `[ClickUp->Freshdesk] Ticket ${ticketId} no longer has stored task links. Skipping.`,
+      );
       continue;
     }
 
@@ -3108,31 +3756,46 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
       const storedCommentIds = getStoredTaskCommentIds(storedTask);
       const syncErrors = [];
 
-      if (eventComment && !storedCommentIds.includes(normalizeText(eventComment.id))) {
+      if (
+        eventComment &&
+        !storedCommentIds.includes(normalizeText(eventComment.id))
+      ) {
         try {
-          await writeSuppression(TICKET_SUPPRESS_PREFIX, ticketId, SYNC_SUPPRESS_WINDOW_MS, {
-            source: "clickup_comment_reverse_sync",
-          });
+          const noteBody = buildClickupCommentNoteBody(
+            taskPayload,
+            eventComment,
+          );
+          await writeSuppression(
+            TICKET_SUPPRESS_PREFIX,
+            ticketId,
+            SYNC_SUPPRESS_WINDOW_MS,
+            {
+              source: "clickup_comment_reverse_sync",
+              conversation_fingerprint: buildConversationFingerprint(noteBody),
+            },
+          );
           await createFreshdeskNote(
             freshdesk.domain,
             freshdesk.encoded_auth,
             ticketId,
-            buildClickupCommentNoteBody(taskPayload, eventComment),
-            commentSyncMode === "private"
+            noteBody,
+            commentSyncMode === "private",
           );
           console.log(
-            `[ClickUp->Freshdesk] Created Freshdesk private note for ticket ${ticketId} from ClickUp comment ${normalizeText(eventComment.id)}.`
+            `[ClickUp->Freshdesk] Created Freshdesk private note for ticket ${ticketId} from ClickUp comment ${normalizeText(eventComment.id)}.`,
           );
         } catch (error) {
-          syncErrors.push(`comment note: ${extractErrorMessage(error, "Reverse comment sync failed.")}`);
+          syncErrors.push(
+            `comment note: ${extractErrorMessage(error, "Reverse comment sync failed.")}`,
+          );
           console.error(
             `[ClickUp->Freshdesk] Failed to create Freshdesk note for ticket ${ticketId} from comment ${normalizeText(eventComment.id)}:`,
-            error
+            error,
           );
         }
       } else {
         console.log(
-          `[ClickUp->Freshdesk] Comment ${normalizeText(eventComment.id)} was already synced for ticket ${ticketId}.`
+          `[ClickUp->Freshdesk] Comment ${normalizeText(eventComment.id)} was already synced for ticket ${ticketId}.`,
         );
       }
 
@@ -3141,12 +3804,17 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
           return task;
         }
 
-        const refreshedTask = normalizeTaskRecord(taskPayload, buildTaskMetaFromStoredRecord(task));
+        const refreshedTask = normalizeTaskRecord(
+          taskPayload,
+          buildTaskMetaFromStoredRecord(task),
+        );
         return {
           ...task,
           ...refreshedTask,
           synced_comment_ids: eventComment
-            ? normalizeStringList(storedCommentIds.concat(normalizeText(eventComment.id)))
+            ? normalizeStringList(
+                storedCommentIds.concat(normalizeText(eventComment.id)),
+              )
             : storedCommentIds,
           last_synced_at: syncTimestamp,
           last_sync_error: syncErrors.join("; "),
@@ -3160,7 +3828,9 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
         message: syncErrors.join("; "),
       });
       if (!syncErrors.length) {
-        console.log(`[ClickUp->Freshdesk] Reverse comment sync completed for ticket ${ticketId}.`);
+        console.log(
+          `[ClickUp->Freshdesk] Reverse comment sync completed for ticket ${ticketId}.`,
+        );
       }
     } catch (error) {
       const nextTasks = stored.tasks.map((task) => {
@@ -3183,7 +3853,7 @@ async function syncClickupTaskToFreshdeskTickets(taskId, settings, payload) {
       });
       console.error(
         `[ClickUp->Freshdesk] Reverse sync failed for task ${normalizedTaskId} and ticket ${ticketId}:`,
-        error
+        error,
       );
     }
   }
@@ -3196,24 +3866,38 @@ async function syncTrelloCardToFreshdeskTickets(cardId, settings, payload) {
   const ticketLinks = await readTaskLinks(normalizedCardId);
 
   if (!ticketLinks.ticket_ids.length) {
-    console.log(`[Trello->Freshdesk] No linked tickets found for card ${normalizedCardId}.`);
+    console.log(
+      `[Trello->Freshdesk] No linked tickets found for card ${normalizedCardId}.`,
+    );
     return [];
   }
 
   const eventKey = getTrelloWebhookEventKey(payload);
   if (!eventKey) {
-    console.log(`[Trello->Freshdesk] Ignoring unsupported Trello webhook for card ${normalizedCardId}.`);
+    console.log(
+      `[Trello->Freshdesk] Ignoring unsupported Trello webhook for card ${normalizedCardId}.`,
+    );
     return [];
   }
 
   const syncMode = getTrelloToFreshdeskNotificationAction(settings, eventKey);
   if (syncMode === "none") {
-    console.log(`[Trello->Freshdesk] Ignoring ${eventKey} for card ${normalizedCardId} because the setting is disabled.`);
+    console.log(
+      `[Trello->Freshdesk] Ignoring ${eventKey} for card ${normalizedCardId} because the setting is disabled.`,
+    );
     return [];
   }
 
-  if (await isSuppressed(TRELLO_CARD_SUPPRESS_PREFIX, normalizedCardId, getTrelloWebhookTimestamp(payload))) {
-    console.log(`[Trello->Freshdesk] Ignoring suppressed webhook for card ${normalizedCardId}.`);
+  if (
+    await isSuppressed(
+      TRELLO_CARD_SUPPRESS_PREFIX,
+      normalizedCardId,
+      getTrelloWebhookTimestamp(payload),
+    )
+  ) {
+    console.log(
+      `[Trello->Freshdesk] Ignoring suppressed webhook for card ${normalizedCardId}.`,
+    );
     return [];
   }
 
@@ -3237,24 +3921,50 @@ async function syncTrelloCardToFreshdeskTickets(cardId, settings, payload) {
     let isDuplicateLabelChange = false;
 
     if (eventKey === "card_labels_updated") {
-      const labelFingerprint = buildTrelloLabelFingerprint(getTrelloLabelsFromWebhookPayload(payload, storedTask));
-      isDuplicateLabelChange = await isDuplicateTrelloLabelChange(ticketId, normalizedCardId, labelFingerprint);
+      const labelFingerprint = buildTrelloLabelFingerprint(
+        getTrelloLabelsFromWebhookPayload(payload, storedTask),
+      );
+      isDuplicateLabelChange = await isDuplicateTrelloLabelChange(
+        ticketId,
+        normalizedCardId,
+        labelFingerprint,
+      );
       if (!isDuplicateLabelChange) {
-        await rememberTrelloLabelChange(ticketId, normalizedCardId, labelFingerprint);
+        await rememberTrelloLabelChange(
+          ticketId,
+          normalizedCardId,
+          labelFingerprint,
+        );
       }
     }
 
     if (!isDuplicateEvent && !isDuplicateLabelChange) {
       try {
-        const noteBody = buildTrelloWebhookNoteBody(eventKey, payload, storedTask);
+        const noteBody = buildTrelloWebhookNoteBody(
+          eventKey,
+          payload,
+          storedTask,
+        );
         if (noteBody) {
-          await writeSuppression(TICKET_SUPPRESS_PREFIX, ticketId, SYNC_SUPPRESS_WINDOW_MS, {
-            source: "trello_webhook_reverse_sync",
-          });
-          await createFreshdeskNoteFromIparam(ticketId, noteBody, syncMode === "private_note_notify");
+          await writeSuppression(
+            TICKET_SUPPRESS_PREFIX,
+            ticketId,
+            SYNC_SUPPRESS_WINDOW_MS,
+            {
+              source: "trello_webhook_reverse_sync",
+              conversation_fingerprint: buildConversationFingerprint(noteBody),
+            },
+          );
+          await createFreshdeskNoteFromIparam(
+            ticketId,
+            noteBody,
+            syncMode === "private_note_notify",
+          );
         }
       } catch (error) {
-        syncErrors.push(extractErrorMessage(error, "Reverse Trello sync failed."));
+        syncErrors.push(
+          extractErrorMessage(error, "Reverse Trello sync failed."),
+        );
       }
     }
 
@@ -3263,7 +3973,13 @@ async function syncTrelloCardToFreshdeskTickets(cardId, settings, payload) {
         return task;
       }
 
-      return buildTrelloTaskFromWebhookPayload(task, payload, syncTimestamp, syncErrors.join("; "), eventId);
+      return buildTrelloTaskFromWebhookPayload(
+        task,
+        payload,
+        syncTimestamp,
+        syncErrors.join("; "),
+        eventId,
+      );
     });
 
     await writeTicketLinks(ticketId, nextTasks);
@@ -3288,7 +4004,10 @@ exports = {
       return renderData();
     } catch (error) {
       return renderData({
-        message: extractErrorMessage(error, "Trello webhook setup failed.").slice(0, 60),
+        message: extractErrorMessage(
+          error,
+          "Trello webhook setup failed.",
+        ).slice(0, 60),
       });
     }
   },
@@ -3299,10 +4018,18 @@ exports = {
       await writeTrelloRuntimeSettings(settings);
       const targetUrl = await generateTargetUrl();
       const previous = await readTrelloWebhookStore();
-      const trelloApiKey = resolveTrelloApiKey(settings && settings.trello_api_key);
+      const trelloApiKey = resolveTrelloApiKey(
+        settings && settings.trello_api_key,
+      );
 
-      if (normalizeText(previous.target_url) !== normalizeText(targetUrl) && previous.registrations.length) {
-        await cleanupRegisteredTrelloWebhooks(previous.registrations, trelloApiKey);
+      if (
+        normalizeText(previous.target_url) !== normalizeText(targetUrl) &&
+        previous.registrations.length
+      ) {
+        await cleanupRegisteredTrelloWebhooks(
+          previous.registrations,
+          trelloApiKey,
+        );
 
         const registrations = [];
         for (let index = 0; index < previous.registrations.length; index += 1) {
@@ -3317,14 +4044,21 @@ exports = {
             continue;
           }
 
-          const firstTicketLinks = await readTicketLinks(storedTicketLinks.ticket_ids[0]);
-          const cardRecord = getStoredTaskRecord(firstTicketLinks.tasks, cardId);
+          const firstTicketLinks = await readTicketLinks(
+            storedTicketLinks.ticket_ids[0],
+          );
+          const cardRecord = getStoredTaskRecord(
+            firstTicketLinks.tasks,
+            cardId,
+          );
 
           if (!cardRecord) {
             continue;
           }
 
-          registrations.push(await registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey));
+          registrations.push(
+            await registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey),
+          );
         }
 
         await writeTrelloWebhookStore(targetUrl, registrations);
@@ -3335,7 +4069,10 @@ exports = {
       return renderData();
     } catch (error) {
       return renderData({
-        message: extractErrorMessage(error, "Trello webhook update failed.").slice(0, 60),
+        message: extractErrorMessage(
+          error,
+          "Trello webhook update failed.",
+        ).slice(0, 60),
       });
     }
   },
@@ -3343,7 +4080,10 @@ exports = {
   async onAppUninstall() {
     try {
       const previous = await readTrelloWebhookStore();
-      await cleanupRegisteredTrelloWebhooks(previous.registrations, resolveTrelloApiKey());
+      await cleanupRegisteredTrelloWebhooks(
+        previous.registrations,
+        resolveTrelloApiKey(),
+      );
       await clearTrelloWebhookStore();
       await clearTrelloRuntimeSettings();
       return renderData();
@@ -3360,7 +4100,7 @@ exports = {
         const eventKey = getTrelloWebhookEventKey(payload);
 
         console.log(
-          `[Trello->Freshdesk] Received Trello webhook ${eventKey || "unknown"} for card ${cardId || "unknown"}.`
+          `[Trello->Freshdesk] Received Trello webhook ${eventKey || "unknown"} for card ${cardId || "unknown"}.`,
         );
 
         if (!cardId || !eventKey) {
@@ -3377,13 +4117,16 @@ exports = {
       const payloadSummary = summarizeClickupExternalPayload(payload);
 
       console.log(
-        `[ClickUp->Freshdesk] Received external event ${eventName || "unknown"} for task ${taskId || "unknown"}.`
+        `[ClickUp->Freshdesk] Received external event ${eventName || "unknown"} for task ${taskId || "unknown"}.`,
       );
-      console.log("[ClickUp->Freshdesk] Event payload summary:", payloadSummary);
+      console.log(
+        "[ClickUp->Freshdesk] Event payload summary:",
+        payloadSummary,
+      );
 
       if (!isSupportedClickupReverseEvent(eventName) || !taskId) {
         console.log(
-          `[ClickUp->Freshdesk] Ignoring external event ${eventName || "unknown"} because it is not a supported comment event or task_id is missing.`
+          `[ClickUp->Freshdesk] Ignoring external event ${eventName || "unknown"} because it is not a supported comment event or task_id is missing.`,
         );
         return;
       }
@@ -3396,8 +4139,12 @@ exports = {
 
   async getDashboardData() {
     try {
-      const summary = await readDashboardSummary();
+      const storedSummary = await readDashboardSummary();
       const linked_tickets = sortDashboardTickets(await readDashboardTickets());
+      const summary = buildDashboardSummaryFromTickets(
+        linked_tickets,
+        storedSummary,
+      );
       const insights = buildDashboardInsights(linked_tickets);
 
       return buildSuccess({
@@ -3425,12 +4172,9 @@ exports = {
         return;
       }
 
-      await syncStoredCardsWithTicket(
-        ticket.id,
-        {
-          ...ticket,
-        }
-      );
+      await syncStoredCardsWithTicket(ticket.id, {
+        ...ticket,
+      });
     } catch (error) {
       console.error("Automatic Trello sync failed on ticket update:", error);
     }
@@ -3441,7 +4185,10 @@ exports = {
       const settings = getEventIparams(payload);
       const conversation = normalizeEventConversation(payload);
       const ticket = normalizeEventTicket(payload);
-      if (ticket.id && (await isSuppressed(TICKET_SUPPRESS_PREFIX, ticket.id, Date.now()))) {
+      if (
+        ticket.id &&
+        (await isSuppressedGeneratedConversation(ticket.id, payload, Date.now()))
+      ) {
         return;
       }
 
@@ -3450,7 +4197,12 @@ exports = {
       }
 
       if (isForwardConversation(payload)) {
-        if (getFreshdeskToTrelloNotificationAction(settings, "ticket_forwarded") !== "comment") {
+        if (
+          getFreshdeskToTrelloNotificationAction(
+            settings,
+            "ticket_forwarded",
+          ) !== "comment"
+        ) {
           return;
         }
 
@@ -3459,12 +4211,21 @@ exports = {
           return;
         }
 
-        await syncCommentToStoredCards(ticket.id, forwardComment, "Ticket forward sync failed.");
+        await syncCommentToStoredCards(
+          ticket.id,
+          forwardComment,
+          "Ticket forward sync failed.",
+        );
         return;
       }
 
       if (isPrivateConversation(conversation)) {
-        if (getFreshdeskToTrelloNotificationAction(settings, "private_note_added") !== "comment") {
+        if (
+          getFreshdeskToTrelloNotificationAction(
+            settings,
+            "private_note_added",
+          ) !== "comment"
+        ) {
           return;
         }
 
@@ -3473,12 +4234,21 @@ exports = {
           return;
         }
 
-        await syncCommentToStoredCards(ticket.id, privateNoteComment, "Private note sync failed.");
+        await syncCommentToStoredCards(
+          ticket.id,
+          privateNoteComment,
+          "Private note sync failed.",
+        );
         return;
       }
 
       if (isPublicNoteConversation(payload)) {
-        if (getFreshdeskToTrelloNotificationAction(settings, "public_note_added") !== "comment") {
+        if (
+          getFreshdeskToTrelloNotificationAction(
+            settings,
+            "public_note_added",
+          ) !== "comment"
+        ) {
           return;
         }
 
@@ -3487,7 +4257,11 @@ exports = {
           return;
         }
 
-        await syncCommentToStoredCards(ticket.id, publicNoteComment, "Public note sync failed.");
+        await syncCommentToStoredCards(
+          ticket.id,
+          publicNoteComment,
+          "Public note sync failed.",
+        );
         return;
       }
 
@@ -3499,7 +4273,12 @@ exports = {
         return;
       }
 
-      if (getFreshdeskToTrelloNotificationAction(settings, "agent_reply_added") !== "comment") {
+      if (
+        getFreshdeskToTrelloNotificationAction(
+          settings,
+          "agent_reply_added",
+        ) !== "comment"
+      ) {
         return;
       }
 
@@ -3508,7 +4287,11 @@ exports = {
         return;
       }
 
-      await syncCommentToStoredCards(ticket.id, agentReplyComment, "Agent reply sync failed.");
+      await syncCommentToStoredCards(
+        ticket.id,
+        agentReplyComment,
+        "Agent reply sync failed.",
+      );
     } catch (error) {
       console.error("Conversation sync to Trello failed:", error);
     }
@@ -3530,7 +4313,9 @@ exports = {
       const summary = await readDashboardSummary();
       if (
         stored.tasks.length &&
-        !summary.tracked_ticket_ids.some((trackedId) => normalizeText(trackedId) === ticketId)
+        !summary.tracked_ticket_ids.some(
+          (trackedId) => normalizeText(trackedId) === ticketId,
+        )
       ) {
         await syncDashboardSummary(ticketId, [], stored.tasks);
       }
@@ -3551,29 +4336,39 @@ exports = {
         {},
         requestArgs.trello_api_key,
         "",
-        requestArgs
+        requestArgs,
       );
       const payload = ensureSuccess(
         await invokeTemplate("trello_boards", requestContext),
-        "Could not load Trello boards."
+        "Could not load Trello boards.",
       );
-      const boards = (Array.isArray(payload) ? payload : []).map(normalizeTrelloBoard).filter(Boolean);
+      const boards = (Array.isArray(payload) ? payload : [])
+        .map(normalizeTrelloBoard)
+        .filter(Boolean);
       return buildSuccess({ boards });
     } catch (error) {
       if (isInvalidTrelloTokenError(error)) {
         console.error("[Trello] Failed to load boards: invalid saved token.", {
-          token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
-          token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+          token_fingerprint: normalizeText(
+            requestContext && requestContext.trello_token_fingerprint,
+          ),
+          token_saved_at: normalizeText(
+            requestContext && requestContext.trello_token_saved_at,
+          ),
         });
         return buildFailure(
           "The saved Trello connection is no longer valid. Reconnect Trello in app settings, then update or reinstall the app.",
-          error
+          error,
         );
       }
 
       console.error("[Trello] Failed to load boards:", {
-        token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
-        token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+        token_fingerprint: normalizeText(
+          requestContext && requestContext.trello_token_fingerprint,
+        ),
+        token_saved_at: normalizeText(
+          requestContext && requestContext.trello_token_saved_at,
+        ),
         message: extractErrorMessage(error, "Unable to load Trello boards."),
       });
       return buildFailure("Unable to load Trello boards.", error);
@@ -3596,20 +4391,26 @@ exports = {
         },
         requestArgs.trello_api_key,
         "",
-        requestArgs
+        requestArgs,
       );
 
       const payload = ensureSuccess(
         await invokeTemplate("trello_members", requestContext),
-        "Could not load Trello members."
+        "Could not load Trello members.",
       );
-      const members = (Array.isArray(payload) ? payload : []).map(normalizeTrelloMember).filter(Boolean);
+      const members = (Array.isArray(payload) ? payload : [])
+        .map(normalizeTrelloMember)
+        .filter(Boolean);
       return buildSuccess({ members });
     } catch (error) {
       console.error("[Trello] Failed to load members:", {
         board_id: normalizeText(args && parseArgs(args).board_id),
-        token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
-        token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+        token_fingerprint: normalizeText(
+          requestContext && requestContext.trello_token_fingerprint,
+        ),
+        token_saved_at: normalizeText(
+          requestContext && requestContext.trello_token_saved_at,
+        ),
         message: extractErrorMessage(error, "Unable to load Trello members."),
       });
       return buildFailure("Unable to load Trello members.", error);
@@ -3632,20 +4433,26 @@ exports = {
         },
         requestArgs.trello_api_key,
         "",
-        requestArgs
+        requestArgs,
       );
 
       const payload = ensureSuccess(
         await invokeTemplate("trello_labels", requestContext),
-        "Could not load Trello labels."
+        "Could not load Trello labels.",
       );
-      const labels = (Array.isArray(payload) ? payload : []).map(normalizeTrelloLabel).filter(Boolean);
+      const labels = (Array.isArray(payload) ? payload : [])
+        .map(normalizeTrelloLabel)
+        .filter(Boolean);
       return buildSuccess({ labels });
     } catch (error) {
       console.error("[Trello] Failed to load labels:", {
         board_id: normalizeText(args && parseArgs(args).board_id),
-        token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
-        token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+        token_fingerprint: normalizeText(
+          requestContext && requestContext.trello_token_fingerprint,
+        ),
+        token_saved_at: normalizeText(
+          requestContext && requestContext.trello_token_saved_at,
+        ),
         message: extractErrorMessage(error, "Unable to load Trello labels."),
       });
       return buildFailure("Unable to load Trello labels.", error);
@@ -3668,28 +4475,34 @@ exports = {
         },
         requestArgs.trello_api_key,
         "",
-        requestArgs
+        requestArgs,
       );
 
       const payload = ensureSuccess(
         await invokeTemplate("trello_lists", requestContext),
-        "Could not load Trello lists."
+        "Could not load Trello lists.",
       );
-      const lists = (Array.isArray(payload) ? payload : []).map(normalizeTrelloList).filter(Boolean);
+      const lists = (Array.isArray(payload) ? payload : [])
+        .map(normalizeTrelloList)
+        .filter(Boolean);
       return buildSuccess({ lists });
     } catch (error) {
       if (isInvalidTrelloTokenError(error)) {
         console.error("[Trello] Failed to load lists: invalid saved token.");
         return buildFailure(
           "The saved Trello connection is no longer valid. Reconnect Trello in app settings, then update or reinstall the app.",
-          error
+          error,
         );
       }
 
       console.error("[Trello] Failed to load lists:", {
         board_id: normalizeText(args && parseArgs(args).board_id),
-        token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
-        token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+        token_fingerprint: normalizeText(
+          requestContext && requestContext.trello_token_fingerprint,
+        ),
+        token_saved_at: normalizeText(
+          requestContext && requestContext.trello_token_saved_at,
+        ),
         message: extractErrorMessage(error, "Unable to load Trello lists."),
       });
       return buildFailure("Unable to load Trello lists.", error);
@@ -3712,12 +4525,12 @@ exports = {
         },
         requestArgs.trello_api_key,
         "",
-        requestArgs
+        requestArgs,
       );
 
       const payload = ensureSuccess(
         await invokeTemplate("trello_cards", requestContext),
-        "Could not load Trello cards."
+        "Could not load Trello cards.",
       );
 
       const cards = (Array.isArray(payload) ? payload : [])
@@ -3727,7 +4540,7 @@ exports = {
             workspace_name: normalizeText(requestArgs.board_name),
             list_id: listId,
             list_name: normalizeText(requestArgs.list_name),
-          })
+          }),
         )
         .filter(Boolean);
 
@@ -3737,14 +4550,18 @@ exports = {
         console.error("[Trello] Failed to load cards: invalid saved token.");
         return buildFailure(
           "The saved Trello connection is no longer valid. Reconnect Trello in app settings, then update or reinstall the app.",
-          error
+          error,
         );
       }
 
       console.error("[Trello] Failed to load cards:", {
         list_id: normalizeText(args && parseArgs(args).list_id),
-        token_fingerprint: normalizeText(requestContext && requestContext.trello_token_fingerprint),
-        token_saved_at: normalizeText(requestContext && requestContext.trello_token_saved_at),
+        token_fingerprint: normalizeText(
+          requestContext && requestContext.trello_token_fingerprint,
+        ),
+        token_saved_at: normalizeText(
+          requestContext && requestContext.trello_token_saved_at,
+        ),
         message: extractErrorMessage(error, "Unable to load Trello cards."),
       });
       return buildFailure("Unable to load Trello cards.", error);
@@ -3760,7 +4577,9 @@ exports = {
       const description = normalizeText(requestArgs.description);
 
       if (!ticketId || !listId || !title || !description) {
-        return buildFailure("Ticket ID, card name, description, and list are required.");
+        return buildFailure(
+          "Ticket ID, card name, description, and list are required.",
+        );
       }
 
       const requestBody = {
@@ -3780,15 +4599,11 @@ exports = {
         {},
         requestArgs.trello_api_key,
         "",
-        requestArgs
+        requestArgs,
       );
       const createdCardPayload = ensureSuccess(
-        await invokeTemplate(
-          "trello_card_create",
-          requestContext,
-          requestBody
-        ),
-        "Could not create the Trello card."
+        await invokeTemplate("trello_card_create", requestContext, requestBody),
+        "Could not create the Trello card.",
       );
 
       const cardRecord = normalizeTrelloCardRecord(createdCardPayload, {
@@ -3797,7 +4612,9 @@ exports = {
         list_id: listId,
         list_name: normalizeText(requestArgs.list_name),
         assignees: normalizeAssignees(requestArgs.members),
-        labels: (Array.isArray(requestArgs.labels) ? requestArgs.labels : []).map(normalizeTrelloLabel).filter(Boolean),
+        labels: (Array.isArray(requestArgs.labels) ? requestArgs.labels : [])
+          .map(normalizeTrelloLabel)
+          .filter(Boolean),
         source: "created",
         linked_at: new Date().toISOString(),
       });
@@ -3806,25 +4623,37 @@ exports = {
       let nextTasks = upsertLinkedTask(existing.tasks, cardRecord);
       await writeTicketLinks(ticketId, nextTasks);
 
-      const linkedActionErrors = await applyLinkedCardNotifications(requestArgs.ticket || {}, cardRecord, requestArgs);
+      const linkedActionErrors = await applyLinkedCardNotifications(
+        requestArgs.ticket || {},
+        cardRecord,
+        requestArgs,
+      );
 
       const selectionErrors = await applySelectionsToTrelloCard(
         normalizeText(cardRecord && cardRecord.task_id),
         memberIds,
         labelIds,
-        requestArgs.trello_api_key
+        requestArgs.trello_api_key,
       );
       linkedActionErrors.push(...selectionErrors);
 
       try {
-        await ensureTrelloWebhookRegistration(cardRecord, requestArgs.trello_api_key);
+        await ensureTrelloWebhookRegistration(
+          cardRecord,
+          requestArgs.trello_api_key,
+        );
       } catch (error) {
-        linkedActionErrors.push(`Trello webhook: ${extractErrorMessage(error, "Webhook setup failed.")}`);
+        linkedActionErrors.push(
+          `Trello webhook: ${extractErrorMessage(error, "Webhook setup failed.")}`,
+        );
       }
 
       if (linkedActionErrors.length) {
         nextTasks = nextTasks.map((task) => {
-          if (normalizeText(task && task.task_id) !== normalizeText(cardRecord && cardRecord.task_id)) {
+          if (
+            normalizeText(task && task.task_id) !==
+            normalizeText(cardRecord && cardRecord.task_id)
+          ) {
             return task;
           }
 
@@ -3896,17 +4725,29 @@ exports = {
       let nextTasks = upsertLinkedTask(existing.tasks, cardRecord);
       await writeTicketLinks(ticketId, nextTasks);
 
-      const linkedActionErrors = await applyLinkedCardNotifications(requestArgs.ticket || {}, cardRecord, requestArgs);
+      const linkedActionErrors = await applyLinkedCardNotifications(
+        requestArgs.ticket || {},
+        cardRecord,
+        requestArgs,
+      );
 
       try {
-        await ensureTrelloWebhookRegistration(cardRecord, requestArgs.trello_api_key);
+        await ensureTrelloWebhookRegistration(
+          cardRecord,
+          requestArgs.trello_api_key,
+        );
       } catch (error) {
-        linkedActionErrors.push(`Trello webhook: ${extractErrorMessage(error, "Webhook setup failed.")}`);
+        linkedActionErrors.push(
+          `Trello webhook: ${extractErrorMessage(error, "Webhook setup failed.")}`,
+        );
       }
 
       if (linkedActionErrors.length) {
         nextTasks = nextTasks.map((task) => {
-          if (normalizeText(task && task.task_id) !== normalizeText(cardRecord && cardRecord.task_id)) {
+          if (
+            normalizeText(task && task.task_id) !==
+            normalizeText(cardRecord && cardRecord.task_id)
+          ) {
             return task;
           }
 
@@ -3939,7 +4780,9 @@ exports = {
       }
 
       const existing = await readTicketLinks(ticketId);
-      const nextTasks = existing.tasks.filter((task) => normalizeText(task && task.task_id) !== taskId);
+      const nextTasks = existing.tasks.filter(
+        (task) => normalizeText(task && task.task_id) !== taskId,
+      );
       await writeTicketLinks(ticketId, nextTasks);
       await cleanupTrelloWebhookIfUnused(taskId, requestArgs.trello_api_key);
 
@@ -3955,16 +4798,14 @@ exports = {
     try {
       const payload = ensureSuccess(
         await invokeTemplate("clickup_workspaces", {}),
-        "Could not load ClickUp workspaces."
+        "Could not load ClickUp workspaces.",
       );
       const rawWorkspaces = Array.isArray(payload && payload.teams)
         ? payload.teams
         : Array.isArray(payload && payload.team)
-        ? payload.team
-        : [];
-      const workspaces = rawWorkspaces
-        .map(normalizeWorkspace)
-        .filter(Boolean);
+          ? payload.team
+          : [];
+      const workspaces = rawWorkspaces.map(normalizeWorkspace).filter(Boolean);
 
       return buildSuccess({ workspaces });
     } catch (error) {
@@ -3985,9 +4826,11 @@ exports = {
         await invokeTemplate("clickup_spaces", {
           team_id: workspaceId,
         }),
-        "Could not load ClickUp spaces."
+        "Could not load ClickUp spaces.",
       );
-      const spaces = (Array.isArray(payload && payload.spaces) ? payload.spaces : [])
+      const spaces = (
+        Array.isArray(payload && payload.spaces) ? payload.spaces : []
+      )
         .map(normalizeSpace)
         .filter(Boolean);
 
@@ -4010,9 +4853,11 @@ exports = {
         await invokeTemplate("clickup_lists", {
           space_id: spaceId,
         }),
-        "Could not load ClickUp lists."
+        "Could not load ClickUp lists.",
       );
-      const lists = (Array.isArray(payload && payload.lists) ? payload.lists : [])
+      const lists = (
+        Array.isArray(payload && payload.lists) ? payload.lists : []
+      )
         .map(normalizeList)
         .filter(Boolean);
 
@@ -4033,21 +4878,25 @@ exports = {
 
       const payload = ensureSuccess(
         await invokeTemplate("clickup_workspaces", {}),
-        "Could not load ClickUp members."
+        "Could not load ClickUp members.",
       );
       const rawWorkspaces = Array.isArray(payload && payload.teams)
         ? payload.teams
         : Array.isArray(payload && payload.team)
-        ? payload.team
-        : [];
+          ? payload.team
+          : [];
       const selectedWorkspace = rawWorkspaces.find((workspace) => {
         return normalizeText(workspace && workspace.id) === workspaceId;
       });
-      const rawMembers = Array.isArray(selectedWorkspace && selectedWorkspace.members)
+      const rawMembers = Array.isArray(
+        selectedWorkspace && selectedWorkspace.members,
+      )
         ? selectedWorkspace.members
         : [];
       const members = rawMembers
-        .map((member) => sanitizeMemberRecord(member && member.user ? member.user : member))
+        .map((member) =>
+          sanitizeMemberRecord(member && member.user ? member.user : member),
+        )
         .filter(Boolean);
 
       return buildSuccess({ members });
@@ -4082,9 +4931,11 @@ exports = {
             list_id: listId,
             page,
           }),
-          "Could not load ClickUp tasks."
+          "Could not load ClickUp tasks.",
         );
-        const pageTasks = Array.isArray(payload && payload.tasks) ? payload.tasks : [];
+        const pageTasks = Array.isArray(payload && payload.tasks)
+          ? payload.tasks
+          : [];
 
         pageTasks.forEach((task) => {
           const normalizedTask = normalizeTaskRecord(task, meta);
@@ -4114,7 +4965,9 @@ exports = {
       const priority = resolveClickupPriorityValue(requestArgs.priority);
 
       if (!ticketId || !listId || !title || !description || !priority) {
-        return buildFailure("Ticket ID, title, description, list, and priority are required.");
+        return buildFailure(
+          "Ticket ID, title, description, list, and priority are required.",
+        );
       }
 
       const requestBody = {
@@ -4124,7 +4977,9 @@ exports = {
       };
 
       const assigneeId = normalizeText(requestArgs.assignee_id);
-      const dueDateTimestamp = convertDateInputToTimestamp(requestArgs.due_date);
+      const dueDateTimestamp = convertDateInputToTimestamp(
+        requestArgs.due_date,
+      );
 
       if (assigneeId) {
         requestBody.assignees = [Number(assigneeId)];
@@ -4140,9 +4995,9 @@ exports = {
           {
             list_id: listId,
           },
-          requestBody
+          requestBody,
         ),
-        "Could not create the ClickUp task."
+        "Could not create the ClickUp task.",
       );
 
       const taskRecord = normalizeTaskRecord(createdTaskPayload, {
@@ -4161,11 +5016,14 @@ exports = {
       const customFieldErrors = await applyMappedCustomFieldsToTask(
         taskRecord.task_id,
         requestArgs.field_mappings,
-        requestArgs.ticket_custom_fields
+        requestArgs.ticket_custom_fields,
       );
 
       const storedTasks = nextTasks.map((task) => {
-        if (normalizeText(task && task.task_id) !== normalizeText(taskRecord && taskRecord.task_id)) {
+        if (
+          normalizeText(task && task.task_id) !==
+          normalizeText(taskRecord && taskRecord.task_id)
+        ) {
           return task;
         }
 
@@ -4199,7 +5057,11 @@ exports = {
         return buildFailure("Ticket details are not available to sync.");
       }
 
-      const nextTasks = await syncStoredTasksWithTicket(ticketId, ticket, requestArgs.field_mappings);
+      const nextTasks = await syncStoredTasksWithTicket(
+        ticketId,
+        ticket,
+        requestArgs.field_mappings,
+      );
 
       return buildSuccess({
         linked_tasks: nextTasks,
