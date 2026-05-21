@@ -55,7 +55,6 @@ const state = {
 };
 
 const refs = {};
-const MASKED_SECRET_PLACEHOLDER = "********";
 const FRESHDESK_KEY_PLACEHOLDER = "Freshdesk API Key";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -166,7 +165,7 @@ async function hydrateFromConfigs(configs) {
     const safeConfigs = configs || {};
 
     refs.domain.value = safeConfigs.domain || "";
-    refs.apiKey.value = safeConfigs.api_key ? MASKED_SECRET_PLACEHOLDER : "";
+    refs.apiKey.value = safeConfigs.api_key ? getMaskedSecretPlaceholder() : "";
     refs.apiKey.setAttribute("placeholder", FRESHDESK_KEY_PLACEHOLDER);
 
     state.sessionSecrets.trelloToken = safeConfigs.trello_token || "";
@@ -225,11 +224,15 @@ function buildTokenFingerprint(token) {
 
 function getActiveFreshdeskAuth() {
   const freshdeskKey = String(refs.apiKey.value || "").trim();
-  if (freshdeskKey && freshdeskKey !== MASKED_SECRET_PLACEHOLDER) {
+  if (freshdeskKey && freshdeskKey !== getMaskedSecretPlaceholder()) {
     return btoa(`${freshdeskKey}:X`);
   }
 
   return state.sessionSecrets.freshdeskAuth || state.savedConfigs.api_key || "";
+}
+
+function getMaskedSecretPlaceholder() {
+  return String.fromCharCode(42).repeat(8);
 }
 
 function applyTrelloAuthorizationLinks() {
