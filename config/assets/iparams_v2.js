@@ -1,8 +1,8 @@
-const TRELLO_APP_KEY = "81c7dea8b018a4a14f3275147eabd758";
 const TRELLO_AUTH_POPUP_NAME = "trello-connector-auth";
 const TRELLO_AUTH_TIMEOUT_MS = 120000;
 const TRELLO_CALLBACK_PAGE_URL = "https://akashramsankar.github.io/TrelloConnector/trello_auth_complete.html";
 const TRELLO_CALLBACK_ORIGIN = new URL(TRELLO_CALLBACK_PAGE_URL).origin;
+const SECURE_IPARAMS_MASK = "************************";
 const TRELLO_TO_FRESHDESK_EVENTS = [
   { key: "ticket_linked", label: "A ticket is connected to a Trello card" },
   { key: "card_moved", label: "A linked card is moved to another list" },
@@ -84,6 +84,7 @@ function bindRefs() {
   refs.trelloMemberName = document.getElementById("trelloMemberName");
   refs.trelloMemberMeta = document.getElementById("trelloMemberMeta");
   refs.trelloMessage = document.getElementById("trelloMessage");
+  refs.trelloApiKey = document.getElementById("trelloApiKey");
 
   refs.domain = document.getElementById("domain");
   refs.apiKey = document.getElementById("apiKey");
@@ -164,14 +165,15 @@ async function hydrateFromConfigs(configs) {
   try {
     const safeConfigs = configs || {};
 
+    refs.trelloApiKey.value = safeConfigs.trello_api_key || refs.trelloApiKey.value || "";
     refs.domain.value = safeConfigs.domain || "";
     refs.apiKey.value = safeConfigs.api_key ? getMaskedSecretPlaceholder() : "";
     refs.apiKey.setAttribute("placeholder", FRESHDESK_KEY_PLACEHOLDER);
 
     state.sessionSecrets.trelloToken = safeConfigs.trello_token || "";
     state.sessionSecrets.freshdeskAuth = safeConfigs.api_key || "";
-    state.trelloVerified = Boolean(safeConfigs.trello_token);
-    state.freshdeskVerified = Boolean(safeConfigs.domain && safeConfigs.api_key);
+    state.trelloVerified = hasSavedTrelloConnection(safeConfigs);
+    state.freshdeskVerified = hasSavedFreshdeskConnection(safeConfigs);
     state.connectedTrelloMember = safeConfigs.trello_member_name
       ? {
           name: safeConfigs.trello_member_name,
@@ -204,17 +206,31 @@ async function hydrateFromConfigs(configs) {
   maybeAutoOpenTrelloPopup();
 }
 
+function hasSavedTrelloConnection(configs) {
+  return Boolean(
+    configs &&
+      (configs.trello_token ||
+        configs.trello_token_fingerprint ||
+        configs.trello_member_name)
+  );
+}
+
+function hasSavedFreshdeskConnection(configs) {
+  return Boolean(configs && normalizeDomain(configs.domain));
+}
+
 function getActiveTrelloApiKey() {
-  return String(TRELLO_APP_KEY || "").trim();
+  return String(refs.trelloApiKey.value || state.savedConfigs.trello_api_key || "").trim();
 }
 
 function getActiveTrelloToken() {
-  return String(state.sessionSecrets.trelloToken || state.savedConfigs.trello_token || "").trim();
+  const token = String(state.sessionSecrets.trelloToken || state.savedConfigs.trello_token || "").trim();
+  return token || (hasSavedTrelloConnection(state.savedConfigs) ? SECURE_IPARAMS_MASK : "");
 }
 
 function buildTokenFingerprint(token) {
   const normalized = String(token || "").trim();
-  if (!normalized) {
+  if (!normalized || normalized === SECURE_IPARAMS_MASK) {
     return "";
   }
 
@@ -228,11 +244,15 @@ function getActiveFreshdeskAuth() {
     return btoa(`${freshdeskKey}:X`);
   }
 
-  return state.sessionSecrets.freshdeskAuth || state.savedConfigs.api_key || "";
+  return (
+    state.sessionSecrets.freshdeskAuth ||
+    state.savedConfigs.api_key ||
+    (hasSavedFreshdeskConnection(state.savedConfigs) ? SECURE_IPARAMS_MASK : "")
+  );
 }
 
 function getMaskedSecretPlaceholder() {
-  return String.fromCharCode(42).repeat(8);
+  return SECURE_IPARAMS_MASK;
 }
 
 function applyTrelloAuthorizationLinks() {
@@ -649,14 +669,21 @@ function escapeHtml(value) {
 
 function postConfigs() {
   const trelloToken = getActiveTrelloToken();
+  const hasMaskedTrelloToken = trelloToken === SECURE_IPARAMS_MASK;
   return {
     __meta: {
       secure: ["trello_token", "api_key"],
     },
     trello_api_key: getActiveTrelloApiKey(),
     trello_token: trelloToken,
-    trello_token_fingerprint: buildTokenFingerprint(trelloToken),
-    trello_token_saved_at: trelloToken ? new Date().toISOString() : "",
+    trello_token_fingerprint: hasMaskedTrelloToken
+      ? state.savedConfigs.trello_token_fingerprint || ""
+      : buildTokenFingerprint(trelloToken),
+    trello_token_saved_at: hasMaskedTrelloToken
+      ? state.savedConfigs.trello_token_saved_at || ""
+      : trelloToken
+      ? new Date().toISOString()
+      : "",
     trello_member_name: state.connectedTrelloMember ? state.connectedTrelloMember.name : "",
     trello_member_username: state.connectedTrelloMember ? state.connectedTrelloMember.username : "",
     trello_member_url: state.connectedTrelloMember ? state.connectedTrelloMember.url : "",
@@ -695,7 +722,7 @@ async function validate() {
     return false;
   }
 
-  if (!getActiveTrelloToken() || !state.trelloVerified) {
+  if (!state.trelloVerified) {
     showMessage(refs.trelloMessage, "Connect Trello before installing.", "error");
     return false;
   }
@@ -705,7 +732,7 @@ async function validate() {
     return false;
   }
 
-  if (!getActiveFreshdeskAuth() || !state.freshdeskVerified) {
+  if (!state.freshdeskVerified) {
     showMessage(refs.freshdeskMessage, "Verify Freshdesk before installing.", "error");
     return false;
   }

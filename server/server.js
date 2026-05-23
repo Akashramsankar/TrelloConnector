@@ -8,7 +8,7 @@ const TRELLO_RUNTIME_SETTINGS_KEY = "trello_runtime_settings_v1";
 const TICKET_SUPPRESS_PREFIX = "clickup_ticket_suppress_v1:";
 const TRELLO_CARD_SUPPRESS_PREFIX = "trello_card_suppress_v1:";
 const TRELLO_LABEL_DEDUPE_PREFIX = "trello_label_change_dedupe_v1:";
-const TRELLO_APP_KEY = "81c7dea8b018a4a14f3275147eabd758";
+const SECURE_IPARAMS_MASK = "************************";
 const CLICKUP_PAGE_SIZE = 100;
 const DASHBOARD_RECENT_LIMIT = 25;
 const DASHBOARD_STALE_DAYS = 14;
@@ -66,6 +66,10 @@ function safeParseJson(value, fallback) {
 
 function normalizeText(value) {
   return String(value || "").trim();
+}
+
+function isSecureIparamMask(value) {
+  return normalizeText(value) === SECURE_IPARAMS_MASK;
 }
 
 function escapeHtml(value) {
@@ -282,17 +286,29 @@ async function readTrelloRuntimeSettings() {
 }
 
 async function writeTrelloRuntimeSettings(settings) {
+  const previous = await readTrelloRuntimeSettings();
+  const incomingTrelloToken = normalizeText(settings && settings.trello_token);
+  const incomingFreshdeskAuth = normalizeText(settings && settings.api_key);
+  const nextTrelloToken = isSecureIparamMask(incomingTrelloToken)
+    ? previous.trello_token
+    : incomingTrelloToken;
+  const nextFreshdeskAuth = isSecureIparamMask(incomingFreshdeskAuth)
+    ? previous.api_key
+    : incomingFreshdeskAuth;
+
   const nextSettings = {
-    trello_api_key: resolveTrelloApiKey(settings && settings.trello_api_key),
-    trello_token: normalizeText(settings && settings.trello_token),
-    trello_token_fingerprint: normalizeText(
-      settings && settings.trello_token_fingerprint,
-    ),
-    trello_token_saved_at: normalizeText(
-      settings && settings.trello_token_saved_at,
-    ),
+    trello_api_key:
+      resolveTrelloApiKey(settings && settings.trello_api_key) ||
+      previous.trello_api_key,
+    trello_token: nextTrelloToken,
+    trello_token_fingerprint:
+      normalizeText(settings && settings.trello_token_fingerprint) ||
+      previous.trello_token_fingerprint,
+    trello_token_saved_at:
+      normalizeText(settings && settings.trello_token_saved_at) ||
+      previous.trello_token_saved_at,
     domain: normalizeDomain(settings && settings.domain),
-    api_key: normalizeText(settings && settings.api_key),
+    api_key: nextFreshdeskAuth,
   };
 
   await $db.set(TRELLO_RUNTIME_SETTINGS_KEY, nextSettings);
@@ -1377,7 +1393,7 @@ function getFreshdeskContextFromSettings(settings) {
 }
 
 function resolveTrelloApiKey(value) {
-  return normalizeText(value) || TRELLO_APP_KEY;
+  return normalizeText(value);
 }
 
 async function buildTrelloRequestContext(
@@ -1387,10 +1403,14 @@ async function buildTrelloRequestContext(
   diagnostics,
 ) {
   const runtime = await readTrelloRuntimeSettings();
+  const incomingTrelloToken = normalizeText(trelloToken);
   return {
     ...(context || {}),
     trello_api_key: resolveTrelloApiKey(trelloApiKey || runtime.trello_api_key),
-    trello_token: normalizeText(trelloToken || runtime.trello_token),
+    trello_token:
+      incomingTrelloToken && !isSecureIparamMask(incomingTrelloToken)
+        ? incomingTrelloToken
+        : runtime.trello_token,
     trello_token_fingerprint:
       normalizeText(diagnostics && diagnostics.trello_token_fingerprint) ||
       runtime.trello_token_fingerprint,
@@ -4080,9 +4100,10 @@ exports = {
   async onAppUninstall() {
     try {
       const previous = await readTrelloWebhookStore();
+      const runtime = await readTrelloRuntimeSettings();
       await cleanupRegisteredTrelloWebhooks(
         previous.registrations,
-        resolveTrelloApiKey(),
+        resolveTrelloApiKey(runtime && runtime.trello_api_key),
       );
       await clearTrelloWebhookStore();
       await clearTrelloRuntimeSettings();
