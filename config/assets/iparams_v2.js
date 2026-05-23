@@ -2,7 +2,6 @@ const TRELLO_AUTH_POPUP_NAME = "trello-connector-auth";
 const TRELLO_AUTH_TIMEOUT_MS = 120000;
 const TRELLO_CALLBACK_PAGE_URL = "https://akashramsankar.github.io/TrelloConnector/trello_auth_complete.html";
 const TRELLO_CALLBACK_ORIGIN = new URL(TRELLO_CALLBACK_PAGE_URL).origin;
-const SECURE_IPARAMS_MASK = "************************";
 const TRELLO_TO_FRESHDESK_EVENTS = [
   { key: "ticket_linked", label: "A ticket is connected to a Trello card" },
   { key: "card_moved", label: "A linked card is moved to another list" },
@@ -219,18 +218,22 @@ function hasSavedFreshdeskConnection(configs) {
   return Boolean(configs && normalizeDomain(configs.domain));
 }
 
+function getSecureIparamsMask() {
+  return String.fromCharCode(42).repeat(24);
+}
+
 function getActiveTrelloApiKey() {
   return String(refs.trelloApiKey.value || state.savedConfigs.trello_api_key || "").trim();
 }
 
 function getActiveTrelloToken() {
   const token = String(state.sessionSecrets.trelloToken || state.savedConfigs.trello_token || "").trim();
-  return token || (hasSavedTrelloConnection(state.savedConfigs) ? SECURE_IPARAMS_MASK : "");
+  return token || (hasSavedTrelloConnection(state.savedConfigs) ? getSecureIparamsMask() : "");
 }
 
 function buildTokenFingerprint(token) {
   const normalized = String(token || "").trim();
-  if (!normalized || normalized === SECURE_IPARAMS_MASK) {
+  if (!normalized || normalized === getSecureIparamsMask()) {
     return "";
   }
 
@@ -247,12 +250,12 @@ function getActiveFreshdeskAuth() {
   return (
     state.sessionSecrets.freshdeskAuth ||
     state.savedConfigs.api_key ||
-    (hasSavedFreshdeskConnection(state.savedConfigs) ? SECURE_IPARAMS_MASK : "")
+    (hasSavedFreshdeskConnection(state.savedConfigs) ? getSecureIparamsMask() : "")
   );
 }
 
 function getMaskedSecretPlaceholder() {
-  return SECURE_IPARAMS_MASK;
+  return getSecureIparamsMask();
 }
 
 function applyTrelloAuthorizationLinks() {
@@ -669,7 +672,7 @@ function escapeHtml(value) {
 
 function postConfigs() {
   const trelloToken = getActiveTrelloToken();
-  const hasMaskedTrelloToken = trelloToken === SECURE_IPARAMS_MASK;
+  const hasMaskedTrelloToken = trelloToken === getSecureIparamsMask();
   return {
     __meta: {
       secure: ["trello_token", "api_key"],
