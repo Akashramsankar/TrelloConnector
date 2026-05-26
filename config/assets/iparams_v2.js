@@ -2,6 +2,7 @@ const TRELLO_AUTH_POPUP_NAME = "trello-connector-auth";
 const TRELLO_AUTH_TIMEOUT_MS = 120000;
 const TRELLO_CALLBACK_PAGE_URL = "https://akashramsankar.github.io/TrelloConnector/trello_auth_complete.html";
 const TRELLO_CALLBACK_ORIGIN = new URL(TRELLO_CALLBACK_PAGE_URL).origin;
+const DEFAULT_TRELLO_BRIDGE_HOST = "trello-connector-bridge.akashram-trello-bridge.workers.dev";
 const TRELLO_TO_FRESHDESK_EVENTS = [
   { key: "ticket_linked", label: "A ticket is connected to a Trello card" },
   { key: "card_moved", label: "A linked card is moved to another list" },
@@ -83,7 +84,6 @@ function bindRefs() {
   refs.trelloMemberName = document.getElementById("trelloMemberName");
   refs.trelloMemberMeta = document.getElementById("trelloMemberMeta");
   refs.trelloMessage = document.getElementById("trelloMessage");
-  refs.trelloApiKey = document.getElementById("trelloApiKey");
 
   refs.domain = document.getElementById("domain");
   refs.apiKey = document.getElementById("apiKey");
@@ -164,7 +164,6 @@ async function hydrateFromConfigs(configs) {
   try {
     const safeConfigs = configs || {};
 
-    refs.trelloApiKey.value = safeConfigs.trello_api_key || refs.trelloApiKey.value || "";
     refs.domain.value = safeConfigs.domain || "";
     refs.apiKey.value = safeConfigs.api_key ? getMaskedSecretPlaceholder() : "";
     refs.apiKey.setAttribute("placeholder", FRESHDESK_KEY_PLACEHOLDER);
@@ -193,7 +192,7 @@ async function hydrateFromConfigs(configs) {
       ),
     };
 
-    applyTrelloAuthorizationLinks();
+    await refreshTrelloAuthorizationLinks();
     renderNotificationSettings();
     updateTrelloStatus();
     updateFreshdeskStatus();
@@ -222,8 +221,15 @@ function getSecureIparamsMask() {
   return String.fromCharCode(42).repeat(24);
 }
 
-function getActiveTrelloApiKey() {
-  return String(refs.trelloApiKey.value || state.savedConfigs.trello_api_key || "").trim();
+function normalizeBridgeHost(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "");
+}
+
+function getActiveTrelloBridgeHost() {
+  return normalizeBridgeHost(DEFAULT_TRELLO_BRIDGE_HOST);
 }
 
 function getActiveTrelloToken() {
@@ -258,15 +264,47 @@ function getMaskedSecretPlaceholder() {
   return getSecureIparamsMask();
 }
 
-function applyTrelloAuthorizationLinks() {
-  const trelloApiKey = getActiveTrelloApiKey();
-  const returnUrl = buildTrelloAuthReturnUrl();
-  const authorizeUrl = trelloApiKey ? buildTrelloAuthorizeUrl(trelloApiKey, returnUrl) : "#";
-
-  refs.connectTrelloBtn.href = authorizeUrl;
-  refs.resetTrelloBtn.href = authorizeUrl;
+function resetTrelloAuthorizationLinks() {
+  refs.connectTrelloBtn.href = "#";
+  refs.resetTrelloBtn.href = "#";
   refs.connectTrelloBtn.target = TRELLO_AUTH_POPUP_NAME;
   refs.resetTrelloBtn.target = TRELLO_AUTH_POPUP_NAME;
+}
+
+async function refreshTrelloAuthorizationLinks() {
+  const trelloBridgeHost = getActiveTrelloBridgeHost();
+  const returnUrl = buildTrelloAuthReturnUrl();
+
+  resetTrelloAuthorizationLinks();
+
+  if (!trelloBridgeHost) {
+    return;
+  }
+
+  try {
+    const response = await state.client.request.invokeTemplate("trello_authorize_url", {
+      context: {
+        trello_bridge_host: trelloBridgeHost,
+        return_url: encodeURIComponent(returnUrl),
+      },
+    });
+
+    if (Number(response.status) !== 200) {
+      throw new Error("Trello authorization URL is not available.");
+    }
+
+    const payload = safeParseJson(response.response, {});
+    const authorizeUrl = String(payload.authorize_url || payload.url || "").trim();
+    if (!authorizeUrl) {
+      throw new Error("Trello authorization URL is empty.");
+    }
+
+    refs.connectTrelloBtn.href = authorizeUrl;
+    refs.resetTrelloBtn.href = authorizeUrl;
+  } catch (error) {
+    console.error("Failed to prepare Trello sign-in link:", error);
+    showMessage(refs.trelloMessage, "Trello sign-in link is not ready yet. Check the bridge host.", "error");
+  }
 }
 
 function buildTrelloAuthReturnUrl() {
@@ -296,20 +334,6 @@ function maybeAutoOpenTrelloPopup() {
 
   cleanupTrelloAuthFlow();
   showMessage(refs.trelloMessage, "If Trello did not open automatically, click Connect Trello to continue.", "info");
-}
-
-function buildTrelloAuthorizeUrl(trelloApiKey, returnUrl) {
-  const params = new URLSearchParams({
-    callback_method: "fragment",
-    expiration: "never",
-    key: trelloApiKey,
-    name: "Freshdesk Trello Connector",
-    response_type: "token",
-    return_url: returnUrl,
-    scope: "read,write,account",
-  });
-
-  return `https://trello.com/1/authorize?${params.toString()}`;
 }
 
 async function handleTrelloAuthMessage(event) {
@@ -356,10 +380,10 @@ async function handleTrelloAuthMessage(event) {
 }
 
 async function verifyTrelloConnection(token) {
-  const trelloApiKey = getActiveTrelloApiKey();
+  const trelloBridgeHost = getActiveTrelloBridgeHost();
 
-  if (!trelloApiKey) {
-    showMessage(refs.trelloMessage, "Trello is not configured for this app yet.", "error");
+  if (!trelloBridgeHost) {
+    showMessage(refs.trelloMessage, "Trello bridge is not configured for this app yet.", "error");
     return;
   }
 
@@ -368,7 +392,7 @@ async function verifyTrelloConnection(token) {
 
     const response = await state.client.request.invokeTemplate("verify_trello_connection", {
       context: {
-        trello_api_key: trelloApiKey,
+        trello_bridge_host: trelloBridgeHost,
         trello_token: token,
       },
     });
@@ -677,7 +701,7 @@ function postConfigs() {
     __meta: {
       secure: ["trello_token", "api_key"],
     },
-    trello_api_key: getActiveTrelloApiKey(),
+    trello_bridge_host: getActiveTrelloBridgeHost(),
     trello_token: trelloToken,
     trello_token_fingerprint: hasMaskedTrelloToken
       ? state.savedConfigs.trello_token_fingerprint || ""
@@ -720,8 +744,8 @@ function getConfigs(configs) {
 async function validate() {
   await ensureInitialized();
 
-  if (!getActiveTrelloApiKey()) {
-    showMessage(refs.trelloMessage, "Trello is not configured for this app yet.", "error");
+  if (!getActiveTrelloBridgeHost()) {
+    showMessage(refs.trelloMessage, "Trello bridge is required.", "error");
     return false;
   }
 

@@ -1,5 +1,7 @@
 let client;
 
+const DEFAULT_TRELLO_BRIDGE_HOST = "trello-connector-bridge.akashram-trello-bridge.workers.dev";
+
 const state = {
   loaded: false,
   loading: false,
@@ -358,7 +360,7 @@ async function syncLinkedTasks() {
         subject: state.ticket.subject,
         description_text: state.ticket.descriptionText,
       },
-      trello_api_key: getTrelloApiKey(),
+      trello_bridge_host: getTrelloBridgeHost(),
     });
 
     state.linkedTasks = Array.isArray(payload.linked_tasks) ? payload.linked_tasks : state.linkedTasks;
@@ -386,7 +388,7 @@ async function unlinkTask(taskId) {
     const payload = await invokeServerFunction("unlinkTicketCard", {
       ticket_id: state.ticket.id,
       task_id: taskId,
-      trello_api_key: getTrelloApiKey(),
+      trello_bridge_host: getTrelloBridgeHost(),
     });
 
     state.linkedTasks = Array.isArray(payload.linked_tasks) ? payload.linked_tasks : [];
@@ -419,8 +421,11 @@ function handleInstanceMessage(data) {
   render();
 }
 
-function getTrelloApiKey() {
-  return normalizeText(state.iparams && state.iparams.trello_api_key);
+function getTrelloBridgeHost() {
+  return (
+    normalizeText(state.iparams && state.iparams.trello_bridge_host) ||
+    DEFAULT_TRELLO_BRIDGE_HOST
+  );
 }
 
 async function invokeServerFunction(name, body) {

@@ -9,6 +9,7 @@
         }
       },
       "requests": {
+        "trello_authorize_url": {},
         "verify_trello_connection": {},
         "trello_boards": {},
         "trello_labels": {},

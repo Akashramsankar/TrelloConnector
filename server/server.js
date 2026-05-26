@@ -5,6 +5,7 @@ const DASHBOARD_RECENT_KEY = "clickup_dashboard_recent_v1";
 const DASHBOARD_TICKETS_KEY = "clickup_dashboard_tickets_v1";
 const TRELLO_WEBHOOK_STORE_KEY = "trello_webhooks_v1";
 const TRELLO_RUNTIME_SETTINGS_KEY = "trello_runtime_settings_v1";
+const DEFAULT_TRELLO_BRIDGE_HOST = "trello-connector-bridge.akashram-trello-bridge.workers.dev";
 const TICKET_SUPPRESS_PREFIX = "clickup_ticket_suppress_v1:";
 const TRELLO_CARD_SUPPRESS_PREFIX = "trello_card_suppress_v1:";
 const TRELLO_LABEL_DEDUPE_PREFIX = "trello_label_change_dedupe_v1:";
@@ -248,6 +249,20 @@ async function writeTrelloWebhookStore(targetUrl, registrations) {
   });
 }
 
+async function ensureTrelloWebhookTargetUrl() {
+  const store = await readTrelloWebhookStore();
+  if (store.target_url) {
+    return store;
+  }
+
+  const targetUrl = await generateTargetUrl();
+  await writeTrelloWebhookStore(targetUrl, store.registrations || []);
+  return {
+    target_url: targetUrl,
+    registrations: store.registrations || [],
+  };
+}
+
 async function clearTrelloWebhookStore() {
   try {
     await $db.delete(TRELLO_WEBHOOK_STORE_KEY);
@@ -262,7 +277,9 @@ async function readTrelloRuntimeSettings() {
   try {
     const stored = await $db.get(TRELLO_RUNTIME_SETTINGS_KEY);
     return {
-      trello_api_key: resolveTrelloApiKey(stored && stored.trello_api_key),
+      trello_bridge_host:
+        resolveTrelloBridgeHost(stored && stored.trello_bridge_host) ||
+        DEFAULT_TRELLO_BRIDGE_HOST,
       trello_token: normalizeText(stored && stored.trello_token),
       trello_token_fingerprint: normalizeText(
         stored && stored.trello_token_fingerprint,
@@ -276,7 +293,7 @@ async function readTrelloRuntimeSettings() {
   } catch (error) {
     if (error && error.status === 404) {
       return {
-        trello_api_key: resolveTrelloApiKey(""),
+        trello_bridge_host: DEFAULT_TRELLO_BRIDGE_HOST,
         trello_token: "",
         trello_token_fingerprint: "",
         trello_token_saved_at: "",
@@ -300,9 +317,9 @@ async function writeTrelloRuntimeSettings(settings) {
     : incomingFreshdeskAuth;
 
   const nextSettings = {
-    trello_api_key:
-      resolveTrelloApiKey(settings && settings.trello_api_key) ||
-      previous.trello_api_key,
+    trello_bridge_host:
+      resolveTrelloBridgeHost(settings && settings.trello_bridge_host) ||
+      DEFAULT_TRELLO_BRIDGE_HOST,
     trello_token: nextTrelloToken,
     trello_token_fingerprint:
       normalizeText(settings && settings.trello_token_fingerprint) ||
@@ -315,6 +332,7 @@ async function writeTrelloRuntimeSettings(settings) {
   };
 
   await $db.set(TRELLO_RUNTIME_SETTINGS_KEY, nextSettings);
+  return nextSettings;
 }
 
 async function clearTrelloRuntimeSettings() {
@@ -1395,13 +1413,15 @@ function getFreshdeskContextFromSettings(settings) {
   };
 }
 
-function resolveTrelloApiKey(value) {
-  return normalizeText(value);
+function resolveTrelloBridgeHost(value) {
+  return normalizeText(value)
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "");
 }
 
 async function buildTrelloRequestContext(
   context,
-  trelloApiKey,
+  trelloBridgeHost,
   trelloToken,
   diagnostics,
 ) {
@@ -1409,7 +1429,10 @@ async function buildTrelloRequestContext(
   const incomingTrelloToken = normalizeText(trelloToken);
   return {
     ...(context || {}),
-    trello_api_key: resolveTrelloApiKey(trelloApiKey || runtime.trello_api_key),
+    trello_bridge_host:
+      resolveTrelloBridgeHost(trelloBridgeHost) ||
+      runtime.trello_bridge_host ||
+      DEFAULT_TRELLO_BRIDGE_HOST,
     trello_token:
       incomingTrelloToken && !isSecureIparamMask(incomingTrelloToken)
         ? incomingTrelloToken
@@ -1599,7 +1622,7 @@ function findTrelloWebhookRegistration(registrations, cardId) {
   );
 }
 
-async function cleanupRegisteredTrelloWebhooks(registrations, trelloApiKey) {
+async function cleanupRegisteredTrelloWebhooks(registrations, trelloBridgeHost) {
   const items = Array.isArray(registrations) ? registrations : [];
 
   for (let index = 0; index < items.length; index += 1) {
@@ -1617,7 +1640,7 @@ async function cleanupRegisteredTrelloWebhooks(registrations, trelloApiKey) {
           {
             webhook_id: webhookId,
           },
-          trelloApiKey,
+          trelloBridgeHost,
         ),
       );
     } catch (error) {
@@ -1626,7 +1649,7 @@ async function cleanupRegisteredTrelloWebhooks(registrations, trelloApiKey) {
   }
 }
 
-async function registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey) {
+async function registerTrelloWebhook(cardRecord, targetUrl, trelloBridgeHost) {
   const cardId = normalizeText(cardRecord && cardRecord.task_id);
   const endpoint = normalizeText(targetUrl);
 
@@ -1641,7 +1664,7 @@ async function registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey) {
   const payload = ensureSuccess(
     await invokeTemplate(
       "trello_webhook_create",
-      await buildTrelloRequestContext({}, trelloApiKey),
+      await buildTrelloRequestContext({}, trelloBridgeHost),
       {
         description: `Freshdesk Trello Connector webhook for card ${cardId}`,
         callbackURL: endpoint,
@@ -1661,13 +1684,13 @@ async function registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey) {
   };
 }
 
-async function ensureTrelloWebhookRegistration(cardRecord, trelloApiKey) {
+async function ensureTrelloWebhookRegistration(cardRecord, trelloBridgeHost) {
   const cardId = normalizeText(cardRecord && cardRecord.task_id);
   if (!cardId) {
     return null;
   }
 
-  const store = await readTrelloWebhookStore();
+  const store = await ensureTrelloWebhookTargetUrl();
   const targetUrl = normalizeText(store && store.target_url);
 
   if (!targetUrl) {
@@ -1693,7 +1716,7 @@ async function ensureTrelloWebhookRegistration(cardRecord, trelloApiKey) {
           {
             webhook_id: normalizeText(existing.webhook_id),
           },
-          trelloApiKey,
+          trelloBridgeHost,
         ),
       );
     } catch (error) {
@@ -1708,7 +1731,7 @@ async function ensureTrelloWebhookRegistration(cardRecord, trelloApiKey) {
   const registration = await registerTrelloWebhook(
     cardRecord,
     targetUrl,
-    trelloApiKey,
+    trelloBridgeHost,
   );
   const remaining = (store.registrations || []).filter((item) => {
     return normalizeText(item && item.card_id) !== cardId;
@@ -1718,7 +1741,87 @@ async function ensureTrelloWebhookRegistration(cardRecord, trelloApiKey) {
   return registration;
 }
 
-async function cleanupTrelloWebhookIfUnused(cardId, trelloApiKey) {
+function isTrelloCardRecord(taskRecord) {
+  const taskUrl = normalizeText(taskRecord && taskRecord.task_url).toLowerCase();
+  return (
+    taskUrl.includes("trello.com/") ||
+    (Array.isArray(taskRecord && taskRecord.labels) &&
+      !normalizeText(taskRecord && taskRecord.space_id))
+  );
+}
+
+function clearTrelloWebhookError(taskRecord) {
+  if (
+    normalizeText(taskRecord && taskRecord.last_sync_error).startsWith(
+      "Trello webhook:",
+    )
+  ) {
+    return {
+      ...taskRecord,
+      last_sync_error: "",
+    };
+  }
+
+  return taskRecord;
+}
+
+function markTrelloWebhookError(taskRecord, error) {
+  return {
+    ...taskRecord,
+    last_sync_error: `Trello webhook: ${extractErrorMessage(error, "Webhook setup failed.")}`,
+  };
+}
+
+async function ensureTrelloWebhookRegistrationForTask(
+  taskRecord,
+  trelloBridgeHost,
+) {
+  try {
+    await ensureTrelloWebhookRegistration(taskRecord, trelloBridgeHost);
+    return clearTrelloWebhookError(taskRecord);
+  } catch (error) {
+    console.error(
+      "Failed to ensure Trello webhook registration:",
+      normalizeText(taskRecord && taskRecord.task_id),
+      error,
+    );
+    return markTrelloWebhookError(taskRecord, error);
+  }
+}
+
+async function ensureTrelloWebhookRegistrationsForTasks(
+  tasks,
+  trelloBridgeHost,
+) {
+  const items = Array.isArray(tasks) ? tasks : [];
+  if (!items.length) {
+    return items;
+  }
+
+  let changed = false;
+  const nextTasks = [];
+
+  for (let index = 0; index < items.length; index += 1) {
+    const task = items[index];
+    if (!isTrelloCardRecord(task)) {
+      nextTasks.push(task);
+      continue;
+    }
+
+    const nextTask = await ensureTrelloWebhookRegistrationForTask(
+      task,
+      trelloBridgeHost,
+    );
+    if (nextTask !== task) {
+      changed = true;
+    }
+    nextTasks.push(nextTask);
+  }
+
+  return changed ? nextTasks : items;
+}
+
+async function cleanupTrelloWebhookIfUnused(cardId, trelloBridgeHost) {
   const normalizedCardId = normalizeText(cardId);
   if (!normalizedCardId) {
     return;
@@ -1747,7 +1850,7 @@ async function cleanupTrelloWebhookIfUnused(cardId, trelloApiKey) {
           {
             webhook_id: normalizeText(registration.webhook_id),
           },
-          trelloApiKey,
+          trelloBridgeHost,
         ),
       );
     }
@@ -2583,7 +2686,9 @@ async function syncStoredCardsWithTicket(ticketId, ticket) {
 
   const syncTimestamp = new Date().toISOString();
   const nextTasks = [];
-  const trelloApiKey = resolveTrelloApiKey(ticket && ticket.trello_api_key);
+  const trelloBridgeHost = resolveTrelloBridgeHost(
+    ticket && ticket.trello_bridge_host,
+  );
 
   for (let index = 0; index < stored.tasks.length; index += 1) {
     const task = stored.tasks[index];
@@ -2604,7 +2709,7 @@ async function syncStoredCardsWithTicket(ticketId, ticket) {
             {
               card_id: normalizeText(task.task_id),
             },
-            trelloApiKey,
+            trelloBridgeHost,
           ),
           updatePayload,
         ),
@@ -2650,7 +2755,7 @@ async function createFreshdeskNoteFromIparam(ticketId, bodyHtml, isPrivate) {
   );
 }
 
-async function createTrelloCardComment(cardId, commentText, trelloApiKey) {
+async function createTrelloCardComment(cardId, commentText, trelloBridgeHost) {
   const normalizedCardId = normalizeText(cardId);
   const normalizedComment = normalizeText(commentText);
 
@@ -2665,7 +2770,7 @@ async function createTrelloCardComment(cardId, commentText, trelloApiKey) {
         {
           card_id: normalizedCardId,
         },
-        trelloApiKey,
+        trelloBridgeHost,
       ),
       {
         text: normalizedComment,
@@ -2675,7 +2780,7 @@ async function createTrelloCardComment(cardId, commentText, trelloApiKey) {
   );
 }
 
-async function addMemberToTrelloCard(cardId, memberId, trelloApiKey) {
+async function addMemberToTrelloCard(cardId, memberId, trelloBridgeHost) {
   ensureSuccess(
     await invokeTemplate(
       "trello_card_member_add",
@@ -2684,14 +2789,14 @@ async function addMemberToTrelloCard(cardId, memberId, trelloApiKey) {
           card_id: normalizeText(cardId),
           value: normalizeText(memberId),
         },
-        trelloApiKey,
+        trelloBridgeHost,
       ),
     ),
     "Could not assign the Trello member.",
   );
 }
 
-async function addLabelToTrelloCard(cardId, labelId, trelloApiKey) {
+async function addLabelToTrelloCard(cardId, labelId, trelloBridgeHost) {
   ensureSuccess(
     await invokeTemplate(
       "trello_card_label_add",
@@ -2700,7 +2805,7 @@ async function addLabelToTrelloCard(cardId, labelId, trelloApiKey) {
           card_id: normalizeText(cardId),
           value: normalizeText(labelId),
         },
-        trelloApiKey,
+        trelloBridgeHost,
       ),
     ),
     "Could not add the Trello label.",
@@ -2711,7 +2816,7 @@ async function applySelectionsToTrelloCard(
   cardId,
   memberIds,
   labelIds,
-  trelloApiKey,
+  trelloBridgeHost,
 ) {
   const errors = [];
   const normalizedCardId = normalizeText(cardId);
@@ -2721,7 +2826,7 @@ async function applySelectionsToTrelloCard(
       await addMemberToTrelloCard(
         normalizedCardId,
         memberIds[index],
-        trelloApiKey,
+        trelloBridgeHost,
       );
     } catch (error) {
       errors.push(
@@ -2735,7 +2840,7 @@ async function applySelectionsToTrelloCard(
       await addLabelToTrelloCard(
         normalizedCardId,
         labelIds[index],
-        trelloApiKey,
+        trelloBridgeHost,
       );
     } catch (error) {
       errors.push(
@@ -2751,7 +2856,7 @@ async function syncCommentToStoredCards(
   ticketId,
   commentText,
   failureMessage,
-  trelloApiKey,
+  trelloBridgeHost,
 ) {
   const stored = await readTicketLinks(ticketId);
   if (!stored.tasks.length || !commentText) {
@@ -2773,7 +2878,7 @@ async function syncCommentToStoredCards(
           source: "freshdesk_to_trello_comment_sync",
         },
       );
-      await createTrelloCardComment(task.task_id, commentText, trelloApiKey);
+      await createTrelloCardComment(task.task_id, commentText, trelloBridgeHost);
       nextTasks.push({
         ...task,
         last_synced_at: syncTimestamp,
@@ -3568,7 +3673,9 @@ async function applyLinkedCardNotifications(ticket, cardRecord, settings) {
     settings,
     "ticket_linked",
   );
-  const trelloApiKey = resolveTrelloApiKey(settings && settings.trello_api_key);
+  const trelloBridgeHost = resolveTrelloBridgeHost(
+    settings && settings.trello_bridge_host,
+  );
 
   if (freshdeskAction !== "none") {
     try {
@@ -3599,7 +3706,7 @@ async function applyLinkedCardNotifications(ticket, cardRecord, settings) {
       await createTrelloCardComment(
         cardRecord && cardRecord.task_id,
         buildFreshdeskTicketLinkedComment(ticket),
-        trelloApiKey,
+        trelloBridgeHost,
       );
     } catch (error) {
       errors.push(
@@ -4038,11 +4145,11 @@ exports = {
   async afterAppUpdate(payload) {
     try {
       const settings = resolveSettings(payload);
-      await writeTrelloRuntimeSettings(settings);
+      const runtimeSettings = await writeTrelloRuntimeSettings(settings);
       const targetUrl = await generateTargetUrl();
       const previous = await readTrelloWebhookStore();
-      const trelloApiKey = resolveTrelloApiKey(
-        settings && settings.trello_api_key,
+      const trelloBridgeHost = resolveTrelloBridgeHost(
+        runtimeSettings && runtimeSettings.trello_bridge_host,
       );
 
       if (
@@ -4051,7 +4158,7 @@ exports = {
       ) {
         await cleanupRegisteredTrelloWebhooks(
           previous.registrations,
-          trelloApiKey,
+          trelloBridgeHost,
         );
 
         const registrations = [];
@@ -4080,7 +4187,11 @@ exports = {
           }
 
           registrations.push(
-            await registerTrelloWebhook(cardRecord, targetUrl, trelloApiKey),
+            await registerTrelloWebhook(
+              cardRecord,
+              targetUrl,
+              trelloBridgeHost,
+            ),
           );
         }
 
@@ -4106,7 +4217,7 @@ exports = {
       const runtime = await readTrelloRuntimeSettings();
       await cleanupRegisteredTrelloWebhooks(
         previous.registrations,
-        resolveTrelloApiKey(runtime && runtime.trello_api_key),
+        resolveTrelloBridgeHost(runtime && runtime.trello_bridge_host),
       );
       await clearTrelloWebhookStore();
       await clearTrelloRuntimeSettings();
@@ -4334,18 +4445,28 @@ exports = {
       if (stored.tasks.length) {
         await syncReverseTaskLinks(ticketId, [], stored.tasks);
       }
+
+      const runtimeSettings = await readTrelloRuntimeSettings();
+      const linkedTasks = await ensureTrelloWebhookRegistrationsForTasks(
+        stored.tasks,
+        runtimeSettings.trello_bridge_host,
+      );
+      if (linkedTasks !== stored.tasks) {
+        await writeTicketLinks(ticketId, linkedTasks);
+      }
+
       const summary = await readDashboardSummary();
       if (
-        stored.tasks.length &&
+        linkedTasks.length &&
         !summary.tracked_ticket_ids.some(
           (trackedId) => normalizeText(trackedId) === ticketId,
         )
       ) {
-        await syncDashboardSummary(ticketId, [], stored.tasks);
+        await syncDashboardSummary(ticketId, [], linkedTasks);
       }
 
       return buildSuccess({
-        linked_tasks: sortLinkedTasks(stored.tasks),
+        linked_tasks: sortLinkedTasks(linkedTasks),
       });
     } catch (error) {
       return buildFailure("Unable to load linked Trello cards.", error);
@@ -4358,7 +4479,7 @@ exports = {
       const requestArgs = parseArgs(args);
       requestContext = await buildTrelloRequestContext(
         {},
-        requestArgs.trello_api_key,
+        requestArgs.trello_bridge_host,
         "",
         requestArgs,
       );
@@ -4413,7 +4534,7 @@ exports = {
         {
           board_id: boardId,
         },
-        requestArgs.trello_api_key,
+        requestArgs.trello_bridge_host,
         "",
         requestArgs,
       );
@@ -4455,7 +4576,7 @@ exports = {
         {
           board_id: boardId,
         },
-        requestArgs.trello_api_key,
+        requestArgs.trello_bridge_host,
         "",
         requestArgs,
       );
@@ -4497,7 +4618,7 @@ exports = {
         {
           board_id: boardId,
         },
-        requestArgs.trello_api_key,
+        requestArgs.trello_bridge_host,
         "",
         requestArgs,
       );
@@ -4547,7 +4668,7 @@ exports = {
         {
           list_id: listId,
         },
-        requestArgs.trello_api_key,
+        requestArgs.trello_bridge_host,
         "",
         requestArgs,
       );
@@ -4621,7 +4742,7 @@ exports = {
 
       const requestContext = await buildTrelloRequestContext(
         {},
-        requestArgs.trello_api_key,
+        requestArgs.trello_bridge_host,
         "",
         requestArgs,
       );
@@ -4657,14 +4778,14 @@ exports = {
         normalizeText(cardRecord && cardRecord.task_id),
         memberIds,
         labelIds,
-        requestArgs.trello_api_key,
+        requestArgs.trello_bridge_host,
       );
       linkedActionErrors.push(...selectionErrors);
 
       try {
         await ensureTrelloWebhookRegistration(
           cardRecord,
-          requestArgs.trello_api_key,
+          requestArgs.trello_bridge_host,
         );
       } catch (error) {
         linkedActionErrors.push(
@@ -4713,7 +4834,12 @@ exports = {
         return buildFailure("Ticket details are not available to sync.");
       }
 
-      const nextTasks = await syncStoredCardsWithTicket(ticketId, ticket);
+      const runtimeSettings = await readTrelloRuntimeSettings();
+      const nextTasks = await ensureTrelloWebhookRegistrationsForTasks(
+        await syncStoredCardsWithTicket(ticketId, ticket),
+        runtimeSettings.trello_bridge_host,
+      );
+      await writeTicketLinks(ticketId, nextTasks);
 
       return buildSuccess({
         linked_tasks: nextTasks,
@@ -4758,7 +4884,7 @@ exports = {
       try {
         await ensureTrelloWebhookRegistration(
           cardRecord,
-          requestArgs.trello_api_key,
+          requestArgs.trello_bridge_host,
         );
       } catch (error) {
         linkedActionErrors.push(
@@ -4808,7 +4934,10 @@ exports = {
         (task) => normalizeText(task && task.task_id) !== taskId,
       );
       await writeTicketLinks(ticketId, nextTasks);
-      await cleanupTrelloWebhookIfUnused(taskId, requestArgs.trello_api_key);
+      await cleanupTrelloWebhookIfUnused(
+        taskId,
+        requestArgs.trello_bridge_host,
+      );
 
       return buildSuccess({
         linked_tasks: nextTasks,

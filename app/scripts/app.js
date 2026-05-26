@@ -1,5 +1,7 @@
 let client;
 
+const DEFAULT_TRELLO_BRIDGE_HOST = "trello-connector-bridge.akashram-trello-bridge.workers.dev";
+
 const state = {
   loading: true,
   loadingMessage: "Loading Trello details...",
@@ -49,7 +51,7 @@ async function initialize() {
     state.iparams = iparams && typeof iparams === "object" ? iparams : {};
 
     console.log("[Trello Modal] Runtime settings snapshot:", {
-      trello_api_key_present: Boolean(getTrelloApiKey()),
+      trello_bridge_host_present: Boolean(getTrelloBridgeHost()),
       trello_token_present_in_client: Boolean(state.iparams && state.iparams.trello_token),
       trello_token_fingerprint: state.iparams && state.iparams.trello_token_fingerprint,
       trello_token_saved_at: state.iparams && state.iparams.trello_token_saved_at,
@@ -338,7 +340,7 @@ async function submitCreate() {
       members: getSelectedMembers(),
       label_ids: state.form.labelIds,
       labels: getSelectedLabels(),
-      trello_api_key: getTrelloApiKey(),
+      trello_bridge_host: getTrelloBridgeHost(),
       trello_to_freshdesk_notifications: state.iparams.trello_to_freshdesk_notifications || {},
       freshdesk_to_trello_notifications: state.iparams.freshdesk_to_trello_notifications || {},
     });
@@ -382,7 +384,7 @@ async function submitLink() {
       list_id: state.form.listId,
       list_name: getListName(state.form.listId),
       task: selectedCard,
-      trello_api_key: getTrelloApiKey(),
+      trello_bridge_host: getTrelloBridgeHost(),
       trello_to_freshdesk_notifications: state.iparams.trello_to_freshdesk_notifications || {},
       freshdesk_to_trello_notifications: state.iparams.freshdesk_to_trello_notifications || {},
     });
@@ -430,7 +432,7 @@ async function loadBoardsIfNeeded() {
   }
 
   const payload = await invokeServerFunction("getTrelloBoards", {
-    trello_api_key: getTrelloApiKey(),
+    trello_bridge_host: getTrelloBridgeHost(),
     trello_token_fingerprint: state.iparams && state.iparams.trello_token_fingerprint,
     trello_token_saved_at: state.iparams && state.iparams.trello_token_saved_at,
   });
@@ -460,7 +462,7 @@ async function loadListsForBoardIfNeeded(boardId) {
 
   const payload = await invokeServerFunction("getTrelloLists", {
     board_id: boardId,
-    trello_api_key: getTrelloApiKey(),
+    trello_bridge_host: getTrelloBridgeHost(),
   });
 
   state.listsByBoard[boardId] = Array.isArray(payload.lists) ? payload.lists : [];
@@ -473,7 +475,7 @@ async function loadMembersForBoardIfNeeded(boardId) {
 
   const payload = await invokeServerFunction("getTrelloMembers", {
     board_id: boardId,
-    trello_api_key: getTrelloApiKey(),
+    trello_bridge_host: getTrelloBridgeHost(),
   });
 
   state.membersByBoard[boardId] = Array.isArray(payload.members) ? payload.members : [];
@@ -486,7 +488,7 @@ async function loadLabelsForBoardIfNeeded(boardId) {
 
   const payload = await invokeServerFunction("getTrelloLabels", {
     board_id: boardId,
-    trello_api_key: getTrelloApiKey(),
+    trello_bridge_host: getTrelloBridgeHost(),
   });
 
   state.labelsByBoard[boardId] = Array.isArray(payload.labels) ? payload.labels : [];
@@ -506,7 +508,7 @@ async function loadCardsForListIfNeeded(listId, forceReload) {
     board_name: getBoardName(state.form.boardId),
     list_id: listId,
     list_name: getListName(listId),
-    trello_api_key: getTrelloApiKey(),
+    trello_bridge_host: getTrelloBridgeHost(),
   });
 
   state.cardsByList[listId] = Array.isArray(payload.cards) ? payload.cards : [];
@@ -773,8 +775,11 @@ function getTicketPayload() {
   };
 }
 
-function getTrelloApiKey() {
-  return normalizeText(state.iparams && state.iparams.trello_api_key);
+function getTrelloBridgeHost() {
+  return (
+    normalizeText(state.iparams && state.iparams.trello_bridge_host) ||
+    DEFAULT_TRELLO_BRIDGE_HOST
+  );
 }
 
 function buildFreshdeskTicketUrl(ticketId) {

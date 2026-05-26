@@ -1,0 +1,6 @@
+name = "trello-connector-bridge"
+main = "src/index.js"
+compatibility_date = "2026-05-25"
+
+[observability]
+enabled = true

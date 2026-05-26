@@ -2,8 +2,19 @@
   "verify_trello_connection": {
     "schema": {
       "method": "GET",
-      "host": "api.trello.com",
-      "path": "/1/members/me?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/members/me",
+      "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "trello_authorize_url": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/authorize-url?return_url=<%= context.return_url %>",
       "headers": {
         "Content-Type": "application/json"
       }
@@ -12,9 +23,10 @@
   "trello_boards": {
     "schema": {
       "method": "GET",
-      "host": "api.trello.com",
-      "path": "/1/members/me/boards?filter=open&fields=name,url,closed&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/members/me/boards?filter=open&fields=name,url,closed",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -22,9 +34,10 @@
   "trello_members": {
     "schema": {
       "method": "GET",
-      "host": "api.trello.com",
-      "path": "/1/boards/<%= context.board_id %>/members?fields=fullName,username,avatarUrl&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/boards/<%= context.board_id %>/members?fields=fullName,username,avatarUrl",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -32,9 +45,10 @@
   "trello_labels": {
     "schema": {
       "method": "GET",
-      "host": "api.trello.com",
-      "path": "/1/boards/<%= context.board_id %>/labels?fields=name,color&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/boards/<%= context.board_id %>/labels?fields=name,color",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -42,9 +56,10 @@
   "trello_lists": {
     "schema": {
       "method": "GET",
-      "host": "api.trello.com",
-      "path": "/1/boards/<%= context.board_id %>/lists?filter=open&fields=name,closed&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/boards/<%= context.board_id %>/lists?filter=open&fields=name,closed",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -52,9 +67,10 @@
   "trello_cards": {
     "schema": {
       "method": "GET",
-      "host": "api.trello.com",
-      "path": "/1/lists/<%= context.list_id %>/cards?fields=name,url,desc,due,closed,idList,dateLastActivity,labels&members=true&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/lists/<%= context.list_id %>/cards?fields=name,url,desc,due,closed,idList,dateLastActivity,labels&members=true",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -62,9 +78,10 @@
   "trello_card_create": {
     "schema": {
       "method": "POST",
-      "host": "api.trello.com",
-      "path": "/1/cards?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/cards",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -72,9 +89,10 @@
   "trello_card_update": {
     "schema": {
       "method": "PUT",
-      "host": "api.trello.com",
-      "path": "/1/cards/<%= context.card_id %>?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/cards/<%= context.card_id %>",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -82,9 +100,10 @@
   "trello_card_comment": {
     "schema": {
       "method": "POST",
-      "host": "api.trello.com",
-      "path": "/1/cards/<%= context.card_id %>/actions/comments?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/cards/<%= context.card_id %>/actions/comments",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -92,9 +111,10 @@
   "trello_card_member_add": {
     "schema": {
       "method": "POST",
-      "host": "api.trello.com",
-      "path": "/1/cards/<%= context.card_id %>/idMembers?value=<%= context.value %>&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/cards/<%= context.card_id %>/idMembers?value=<%= context.value %>",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -102,9 +122,10 @@
   "trello_card_label_add": {
     "schema": {
       "method": "POST",
-      "host": "api.trello.com",
-      "path": "/1/cards/<%= context.card_id %>/idLabels?value=<%= context.value %>&key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/cards/<%= context.card_id %>/idLabels?value=<%= context.value %>",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -112,9 +133,10 @@
   "trello_webhook_create": {
     "schema": {
       "method": "POST",
-      "host": "api.trello.com",
-      "path": "/1/tokens/<%= context.trello_token %>/webhooks?key=<%= context.trello_api_key %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/tokens/webhooks",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
@@ -122,9 +144,10 @@
   "trello_webhook_delete": {
     "schema": {
       "method": "DELETE",
-      "host": "api.trello.com",
-      "path": "/1/webhooks/<%= context.webhook_id %>?key=<%= context.trello_api_key %>&token=<%= context.trello_token %>",
+      "host": "<%= context.trello_bridge_host %>",
+      "path": "/trello/webhooks/<%= context.webhook_id %>",
       "headers": {
+        "Authorization": "Bearer <%= context.trello_token %>",
         "Content-Type": "application/json"
       }
     }
