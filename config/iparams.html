@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trello Connector for Freshdesk</title>
   <script src="{{{appclient}}}"></script>
+  <script src="./assets/app_metadata.js"></script>
   <link rel="stylesheet" href="https://static.freshdev.io/fdk/2.0/assets/freshworks.css" />
   <style>
     body {
@@ -16,7 +17,7 @@
     }
 
     .container {
-      max-width: 760px;
+      max-width: 1098px;
       margin: 0 auto;
     }
 
@@ -241,12 +242,153 @@
         grid-template-columns: 1fr;
       }
     }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    /* More Falcon apps banner, matching the ClickUp connector settings page */
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+    }
+
+    .main,
+    .aside {
+      display: grid;
+      align-content: start;
+    }
+
+    .aside {
+      gap: 16px;
+    }
+
+    .card {
+      padding: 22px;
+      border: 1px solid #d9e1e8;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .card-header {
+      margin-bottom: 18px;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .card-header p {
+      margin: 5px 0 0;
+      color: #5d6e7f;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .app-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .promo-card {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #dfe7ed;
+      border-radius: 8px;
+      color: inherit;
+      text-decoration: none;
+      background: #ffffff;
+    }
+
+    .promo-card:hover {
+      border-color: #9bb9c6;
+      background: #f6fbfc;
+    }
+
+    .promo-icon {
+      width: 42px;
+      height: 42px;
+      display: block;
+      border-radius: 8px;
+      border: 1px solid #d7e2e8;
+      object-fit: cover;
+      background: #fff7dc;
+    }
+
+    .promo-title {
+      color: #123047;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .promo-description {
+      margin-top: 3px;
+      color: #5d6e7f;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .apps-footer {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #d9e1e8;
+    }
+
+    .all-apps-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1b64d8;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .all-apps-link:hover,
+    .all-apps-link:focus {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      .layout,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h3>Trello Connector</h3>
     <p class="intro">Connect Trello, verify Freshdesk, and then install the app.</p>
+
+    <div class="layout">
+    <div class="main">
+
+    <div class="section">
+      <h4>Contact Information</h4>
+      <p class="section-copy">Used for onboarding, important app updates, and support conversations.</p>
+      <div class="contact-grid">
+        <div class="field-row">
+          <label for="installerName">Full Name</label>
+          <input class="text-input" id="installerName" type="text" placeholder="Jane Smith" />
+          <div id="installerNameMessage" class="message"></div>
+        </div>
+        <div class="field-row">
+          <label for="installerEmail">Email Address</label>
+          <input class="text-input" id="installerEmail" type="email" placeholder="jane@example.com" />
+          <div id="installerEmailMessage" class="message"></div>
+        </div>
+      </div>
+    </div>
 
     <div class="section">
       <h4>Trello</h4>
@@ -295,6 +437,23 @@
         <p class="notification-group-title">Update the Trello card when Freshdesk activity happens</p>
         <div id="freshdeskToTrelloList" class="notification-list"></div>
       </div>
+    </div>
+    </div>
+
+    <aside class="aside">
+      <section class="card" aria-labelledby="appsTitle">
+        <div class="card-header">
+          <h2 id="appsTitle">More Falcon apps</h2>
+          <p>Useful add-ons for teams that automate Freshdesk workflows.</p>
+        </div>
+        <div class="app-list" id="promoApps"></div>
+        <div class="apps-footer">
+          <a class="all-apps-link" href="https://falconsaas.online/#apps" target="_blank" rel="noopener">
+            All Apps <span aria-hidden="true">-&gt;</span>
+          </a>
+        </div>
+      </section>
+    </aside>
     </div>
   </div>
 

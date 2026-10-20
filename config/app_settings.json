@@ -1,0 +1,8 @@
+{
+  "install_capture_secret": {
+    "type": "text",
+    "required": true,
+    "secure": true,
+    "label": "Installation capture secret"
+  }
+}

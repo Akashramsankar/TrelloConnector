@@ -1,4 +1,15 @@
 {
+  "capture_installation": {
+    "schema": {
+      "method": "POST",
+      "host": "api.falconsaas.online",
+      "path": "/freshdesk/reopen-ticket/installations",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-Falcon-Install-Secret": "<%= app_settings.install_capture_secret %>"
+      }
+    }
+  },
   "verify_trello_connection": {
     "schema": {
       "method": "GET",

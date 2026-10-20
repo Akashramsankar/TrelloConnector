@@ -202,347 +202,347 @@
     },
     {
       "severity": 1,
-      "value": "server/server.js::199: 'ticketIds' is never reassigned. Use 'const' instead.",
+      "value": "server/server.js::202: 'ticketIds' is never reassigned. Use 'const' instead.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::276: Async function 'readTrelloRuntimeSettings' has a complexity of 11. Maximum allowed is 7.",
+      "value": "server/server.js::279: Async function 'readTrelloRuntimeSettings' has a complexity of 11. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::308: Async function 'writeTrelloRuntimeSettings' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::311: Async function 'writeTrelloRuntimeSettings' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::361: Async function 'isSuppressed' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::364: Async function 'isSuppressed' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::399: Async function 'isDuplicateTrelloLabelChange' has a complexity of 10. Maximum allowed is 7.",
+      "value": "server/server.js::402: Async function 'isDuplicateTrelloLabelChange' has a complexity of 10. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::444: Async function 'readDashboardSummary' has a complexity of 10. Maximum allowed is 7.",
+      "value": "server/server.js::447: Async function 'readDashboardSummary' has a complexity of 10. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::491: Arrow function has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::494: Arrow function has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::569: Function has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::572: Function has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::659: Async function 'syncDashboardSummary' has a complexity of 10. Maximum allowed is 7.",
+      "value": "server/server.js::662: Async function 'syncDashboardSummary' has a complexity of 10. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::673: 'nextTrackedTicketIds' is never reassigned. Use 'const' instead.",
+      "value": "server/server.js::676: 'nextTrackedTicketIds' is never reassigned. Use 'const' instead.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::722: Async function 'invokeTemplate' has a complexity of 10. Maximum allowed is 7.",
+      "value": "server/server.js::725: Async function 'invokeTemplate' has a complexity of 10. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::744: Function 'extractErrorMessage' has a complexity of 15. Maximum allowed is 7.",
+      "value": "server/server.js::747: Function 'extractErrorMessage' has a complexity of 15. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::790: Function 'ensureSuccess' has a complexity of 10. Maximum allowed is 7.",
+      "value": "server/server.js::793: Function 'ensureSuccess' has a complexity of 10. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::909: Function 'normalizeTrelloMember' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::912: Function 'normalizeTrelloMember' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::938: Function 'normalizeTrelloCardRecord' has a complexity of 38. Maximum allowed is 7.",
+      "value": "server/server.js::941: Function 'normalizeTrelloCardRecord' has a complexity of 38. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::992: Function 'sanitizeTrelloCardLinkPayload' has a complexity of 23. Maximum allowed is 7.",
+      "value": "server/server.js::995: Function 'sanitizeTrelloCardLinkPayload' has a complexity of 23. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1043: Function 'resolveClickupPriorityValue' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::1046: Function 'resolveClickupPriorityValue' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1088: Function 'normalizeAssignee' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::1091: Function 'normalizeAssignee' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1137: Function 'normalizeTaskRecord' has a complexity of 47. Maximum allowed is 7.",
+      "value": "server/server.js::1140: Function 'normalizeTaskRecord' has a complexity of 47. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1235: Function 'sanitizeTaskLinkPayload' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::1238: Function 'sanitizeTaskLinkPayload' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1268: Function 'normalizeStatusValue' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::1271: Function 'normalizeStatusValue' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1311: Function 'mapFreshdeskPriorityToClickup' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::1314: Function 'mapFreshdeskPriorityToClickup' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1361: Function 'buildTicketSyncPayload' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::1364: Function 'buildTicketSyncPayload' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1422: Async function 'buildTrelloRequestContext' has a complexity of 10. Maximum allowed is 7.",
+      "value": "server/server.js::1425: Async function 'buildTrelloRequestContext' has a complexity of 10. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1449: Function 'extractExternalPayload' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::1452: Function 'extractExternalPayload' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1479: Function 'getClickupEventTaskId' has a complexity of 15. Maximum allowed is 7.",
+      "value": "server/server.js::1482: Function 'getClickupEventTaskId' has a complexity of 15. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1547: Function 'buildClickupCommentNoteBody' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::1550: Function 'buildClickupCommentNoteBody' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1571: Function 'buildTaskMetaFromStoredRecord' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::1574: Function 'buildTaskMetaFromStoredRecord' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1589: Function 'buildTrelloTaskMetaFromStoredRecord' has a complexity of 19. Maximum allowed is 7.",
+      "value": "server/server.js::1592: Function 'buildTrelloTaskMetaFromStoredRecord' has a complexity of 19. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1605: Duplicate key 'labels'.",
+      "value": "server/server.js::1608: Duplicate key 'labels'.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::1687: Async function 'ensureTrelloWebhookRegistration' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::1690: Async function 'ensureTrelloWebhookRegistration' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2011: Function 'normalizeEventTicket' has a complexity of 16. Maximum allowed is 7.",
+      "value": "server/server.js::2014: Function 'normalizeEventTicket' has a complexity of 16. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2040: Function 'normalizeEventConversation' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::2043: Function 'normalizeEventConversation' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2052: Arrow function has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::2055: Arrow function has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2114: Function 'getMappedFreshdeskFieldValue' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::2117: Function 'getMappedFreshdeskFieldValue' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2224: Function 'buildMappedCustomFieldBody' has a complexity of 22. Maximum allowed is 7.",
+      "value": "server/server.js::2227: Function 'buildMappedCustomFieldBody' has a complexity of 22. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2344: Function 'isCustomerReplyActor' has a complexity of 14. Maximum allowed is 7.",
+      "value": "server/server.js::2347: Function 'isCustomerReplyActor' has a complexity of 14. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2406: Function 'isPublicNoteConversation' has a complexity of 15. Maximum allowed is 7.",
+      "value": "server/server.js::2409: Function 'isPublicNoteConversation' has a complexity of 15. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2440: Function 'isForwardConversation' has a complexity of 14. Maximum allowed is 7.",
+      "value": "server/server.js::2443: Function 'isForwardConversation' has a complexity of 14. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2467: Function 'buildConversationText' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::2470: Function 'buildConversationText' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2528: Async function 'isSuppressedGeneratedConversation' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::2531: Async function 'isSuppressedGeneratedConversation' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2559: Function 'buildPrivateNoteComment' has a complexity of 11. Maximum allowed is 7.",
+      "value": "server/server.js::2562: Function 'buildPrivateNoteComment' has a complexity of 11. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2577: Function 'buildAgentReplyComment' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::2580: Function 'buildAgentReplyComment' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::2600: Function 'buildPublicNoteComment' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::2603: Function 'buildPublicNoteComment' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3050: Function 'labelsMatch' has a complexity of 10. Maximum allowed is 7.",
+      "value": "server/server.js::3053: Function 'labelsMatch' has a complexity of 10. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3089: Function 'getTrelloLabelsFromWebhookPayload' has a complexity of 19. Maximum allowed is 7.",
+      "value": "server/server.js::3092: Function 'getTrelloLabelsFromWebhookPayload' has a complexity of 19. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3152: Function 'buildTrelloTicketLinkedNoteBody' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::3155: Function 'buildTrelloTicketLinkedNoteBody' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3172: Function 'buildForwardComment' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::3175: Function 'buildForwardComment' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3196: Function 'buildFreshdeskTicketLinkedComment' has a complexity of 11. Maximum allowed is 7.",
+      "value": "server/server.js::3199: Function 'buildFreshdeskTicketLinkedComment' has a complexity of 11. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3251: Function 'buildForwardRecipientSentence' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::3254: Function 'buildForwardRecipientSentence' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3346: Function 'getTrelloWebhookCardId' has a complexity of 13. Maximum allowed is 7.",
+      "value": "server/server.js::3349: Function 'getTrelloWebhookCardId' has a complexity of 13. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3374: Function 'getTrelloWebhookEventKey' has a complexity of 30. Maximum allowed is 7.",
+      "value": "server/server.js::3377: Function 'getTrelloWebhookEventKey' has a complexity of 30. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3442: Function 'buildTrelloWebhookNoteBody' has a complexity of 64. Maximum allowed is 7.",
+      "value": "server/server.js::3445: Function 'buildTrelloWebhookNoteBody' has a complexity of 64. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3578: Function 'buildTrelloTaskFromWebhookPayload' has a complexity of 62. Maximum allowed is 7.",
+      "value": "server/server.js::3581: Function 'buildTrelloTaskFromWebhookPayload' has a complexity of 62. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3666: Async function 'applyLinkedCardNotifications' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::3669: Async function 'applyLinkedCardNotifications' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3721: Function 'getClickupCommentFromEvent' has a complexity of 20. Maximum allowed is 7.",
+      "value": "server/server.js::3724: Function 'getClickupCommentFromEvent' has a complexity of 20. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3765: Function 'summarizeClickupExternalPayload' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::3768: Function 'summarizeClickupExternalPayload' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3817: Async function 'syncClickupTaskToFreshdeskTickets' has a complexity of 16. Maximum allowed is 7.",
+      "value": "server/server.js::3820: Async function 'syncClickupTaskToFreshdeskTickets' has a complexity of 16. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::3994: Async function 'syncTrelloCardToFreshdeskTickets' has a complexity of 15. Maximum allowed is 7.",
+      "value": "server/server.js::3997: Async function 'syncTrelloCardToFreshdeskTickets' has a complexity of 15. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4145: Async method 'afterAppUpdate' has a complexity of 11. Maximum allowed is 7.",
+      "value": "server/server.js::4183: Async method 'afterAppUpdate' has a complexity of 11. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4230: Async method 'onExternalEvent' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::4269: Async method 'onExternalEvent' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4318: Async method 'handleConversationCreate' has a complexity of 18. Maximum allowed is 7.",
+      "value": "server/server.js::4357: Async method 'handleConversationCreate' has a complexity of 18. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4476: Async method 'getTrelloBoards' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::4515: Async method 'getTrelloBoards' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4607: Async method 'getTrelloLists' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::4646: Async method 'getTrelloLists' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4657: Async method 'getTrelloCards' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::4696: Async method 'getTrelloCards' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4716: Async method 'createTicketCard' has a complexity of 12. Maximum allowed is 7.",
+      "value": "server/server.js::4755: Async method 'createTicketCard' has a complexity of 12. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::4853: Async method 'linkTicketCard' has a complexity of 8. Maximum allowed is 7.",
+      "value": "server/server.js::4892: Async method 'linkTicketCard' has a complexity of 8. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::5023: Async method 'getClickupMembers' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::5062: Async method 'getClickupMembers' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     },
     {
       "severity": 1,
-      "value": "server/server.js::5111: Async method 'createTicketTask' has a complexity of 9. Maximum allowed is 7.",
+      "value": "server/server.js::5150: Async method 'createTicketTask' has a complexity of 9. Maximum allowed is 7.",
       "type": "lint"
     }
   ],
@@ -6059,6 +6059,1614 @@
       "covered": 61,
       "skipped": 0,
       "pct": 82.43
+    }
+  },
+  "unitTestCoverage": {
+    "server/app_metadata.js": {
+      "path": "server/app_metadata.js",
+      "all": false,
+      "statementMap": {
+        "0": {
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 48
+          }
+        },
+        "1": {
+          "start": {
+            "line": 2,
+            "column": 0
+          },
+          "end": {
+            "line": 2,
+            "column": 30
+          }
+        }
+      },
+      "s": {
+        "0": 1,
+        "1": 1
+      },
+      "branchMap": {
+        "0": {
+          "type": "branch",
+          "line": 1,
+          "loc": {
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 2,
+              "column": 30
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 2,
+                "column": 30
+              }
+            }
+          ]
+        }
+      },
+      "b": {
+        "0": [
+          1
+        ]
+      },
+      "fnMap": {},
+      "f": {}
+    },
+    "server/installation_capture.js": {
+      "path": "server/installation_capture.js",
+      "all": false,
+      "statementMap": {
+        "0": {
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 60
+          }
+        },
+        "1": {
+          "start": {
+            "line": 2,
+            "column": 0
+          },
+          "end": {
+            "line": 2,
+            "column": 0
+          }
+        },
+        "2": {
+          "start": {
+            "line": 3,
+            "column": 0
+          },
+          "end": {
+            "line": 3,
+            "column": 47
+          }
+        },
+        "3": {
+          "start": {
+            "line": 4,
+            "column": 0
+          },
+          "end": {
+            "line": 4,
+            "column": 19
+          }
+        },
+        "4": {
+          "start": {
+            "line": 5,
+            "column": 0
+          },
+          "end": {
+            "line": 5,
+            "column": 36
+          }
+        },
+        "5": {
+          "start": {
+            "line": 6,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 3
+          }
+        },
+        "6": {
+          "start": {
+            "line": 7,
+            "column": 0
+          },
+          "end": {
+            "line": 7,
+            "column": 0
+          }
+        },
+        "7": {
+          "start": {
+            "line": 8,
+            "column": 0
+          },
+          "end": {
+            "line": 8,
+            "column": 45
+          }
+        },
+        "8": {
+          "start": {
+            "line": 9,
+            "column": 0
+          },
+          "end": {
+            "line": 9,
+            "column": 52
+          }
+        },
+        "9": {
+          "start": {
+            "line": 10,
+            "column": 0
+          },
+          "end": {
+            "line": 10,
+            "column": 29
+          }
+        },
+        "10": {
+          "start": {
+            "line": 11,
+            "column": 0
+          },
+          "end": {
+            "line": 11,
+            "column": 23
+          }
+        },
+        "11": {
+          "start": {
+            "line": 12,
+            "column": 0
+          },
+          "end": {
+            "line": 12,
+            "column": 45
+          }
+        },
+        "12": {
+          "start": {
+            "line": 13,
+            "column": 0
+          },
+          "end": {
+            "line": 13,
+            "column": 1
+          }
+        },
+        "13": {
+          "start": {
+            "line": 14,
+            "column": 0
+          },
+          "end": {
+            "line": 14,
+            "column": 0
+          }
+        },
+        "14": {
+          "start": {
+            "line": 15,
+            "column": 0
+          },
+          "end": {
+            "line": 15,
+            "column": 54
+          }
+        },
+        "15": {
+          "start": {
+            "line": 16,
+            "column": 0
+          },
+          "end": {
+            "line": 16,
+            "column": 23
+          }
+        },
+        "16": {
+          "start": {
+            "line": 17,
+            "column": 0
+          },
+          "end": {
+            "line": 17,
+            "column": 26
+          }
+        },
+        "17": {
+          "start": {
+            "line": 18,
+            "column": 0
+          },
+          "end": {
+            "line": 18,
+            "column": 3
+          }
+        },
+        "18": {
+          "start": {
+            "line": 19,
+            "column": 0
+          },
+          "end": {
+            "line": 19,
+            "column": 0
+          }
+        },
+        "19": {
+          "start": {
+            "line": 20,
+            "column": 0
+          },
+          "end": {
+            "line": 20,
+            "column": 23
+          }
+        },
+        "20": {
+          "start": {
+            "line": 21,
+            "column": 0
+          },
+          "end": {
+            "line": 21,
+            "column": 26
+          }
+        },
+        "21": {
+          "start": {
+            "line": 22,
+            "column": 0
+          },
+          "end": {
+            "line": 22,
+            "column": 3
+          }
+        },
+        "22": {
+          "start": {
+            "line": 23,
+            "column": 0
+          },
+          "end": {
+            "line": 23,
+            "column": 0
+          }
+        },
+        "23": {
+          "start": {
+            "line": 24,
+            "column": 0
+          },
+          "end": {
+            "line": 24,
+            "column": 31
+          }
+        },
+        "24": {
+          "start": {
+            "line": 25,
+            "column": 0
+          },
+          "end": {
+            "line": 25,
+            "column": 40
+          }
+        },
+        "25": {
+          "start": {
+            "line": 26,
+            "column": 0
+          },
+          "end": {
+            "line": 26,
+            "column": 48
+          }
+        },
+        "26": {
+          "start": {
+            "line": 27,
+            "column": 0
+          },
+          "end": {
+            "line": 27,
+            "column": 1
+          }
+        },
+        "27": {
+          "start": {
+            "line": 28,
+            "column": 0
+          },
+          "end": {
+            "line": 28,
+            "column": 0
+          }
+        },
+        "28": {
+          "start": {
+            "line": 29,
+            "column": 0
+          },
+          "end": {
+            "line": 29,
+            "column": 29
+          }
+        },
+        "29": {
+          "start": {
+            "line": 30,
+            "column": 0
+          },
+          "end": {
+            "line": 30,
+            "column": 23
+          }
+        },
+        "30": {
+          "start": {
+            "line": 31,
+            "column": 0
+          },
+          "end": {
+            "line": 31,
+            "column": 1
+          }
+        },
+        "31": {
+          "start": {
+            "line": 32,
+            "column": 0
+          },
+          "end": {
+            "line": 32,
+            "column": 0
+          }
+        },
+        "32": {
+          "start": {
+            "line": 33,
+            "column": 0
+          },
+          "end": {
+            "line": 33,
+            "column": 79
+          }
+        },
+        "33": {
+          "start": {
+            "line": 34,
+            "column": 0
+          },
+          "end": {
+            "line": 34,
+            "column": 26
+          }
+        },
+        "34": {
+          "start": {
+            "line": 35,
+            "column": 0
+          },
+          "end": {
+            "line": 35,
+            "column": 16
+          }
+        },
+        "35": {
+          "start": {
+            "line": 36,
+            "column": 0
+          },
+          "end": {
+            "line": 36,
+            "column": 3
+          }
+        },
+        "36": {
+          "start": {
+            "line": 37,
+            "column": 0
+          },
+          "end": {
+            "line": 37,
+            "column": 0
+          }
+        },
+        "37": {
+          "start": {
+            "line": 38,
+            "column": 0
+          },
+          "end": {
+            "line": 38,
+            "column": 41
+          }
+        },
+        "38": {
+          "start": {
+            "line": 39,
+            "column": 0
+          },
+          "end": {
+            "line": 39,
+            "column": 1
+          }
+        },
+        "39": {
+          "start": {
+            "line": 40,
+            "column": 0
+          },
+          "end": {
+            "line": 40,
+            "column": 0
+          }
+        },
+        "40": {
+          "start": {
+            "line": 41,
+            "column": 0
+          },
+          "end": {
+            "line": 41,
+            "column": 71
+          }
+        },
+        "41": {
+          "start": {
+            "line": 42,
+            "column": 0
+          },
+          "end": {
+            "line": 42,
+            "column": 40
+          }
+        },
+        "42": {
+          "start": {
+            "line": 43,
+            "column": 0
+          },
+          "end": {
+            "line": 43,
+            "column": 67
+          }
+        },
+        "43": {
+          "start": {
+            "line": 44,
+            "column": 0
+          },
+          "end": {
+            "line": 44,
+            "column": 62
+          }
+        },
+        "44": {
+          "start": {
+            "line": 45,
+            "column": 0
+          },
+          "end": {
+            "line": 45,
+            "column": 70
+          }
+        },
+        "45": {
+          "start": {
+            "line": 46,
+            "column": 0
+          },
+          "end": {
+            "line": 46,
+            "column": 0
+          }
+        },
+        "46": {
+          "start": {
+            "line": 47,
+            "column": 0
+          },
+          "end": {
+            "line": 47,
+            "column": 10
+          }
+        },
+        "47": {
+          "start": {
+            "line": 48,
+            "column": 0
+          },
+          "end": {
+            "line": 48,
+            "column": 23
+          }
+        },
+        "48": {
+          "start": {
+            "line": 49,
+            "column": 0
+          },
+          "end": {
+            "line": 49,
+            "column": 29
+          }
+        },
+        "49": {
+          "start": {
+            "line": 50,
+            "column": 0
+          },
+          "end": {
+            "line": 50,
+            "column": 42
+          }
+        },
+        "50": {
+          "start": {
+            "line": 51,
+            "column": 0
+          },
+          "end": {
+            "line": 51,
+            "column": 48
+          }
+        },
+        "51": {
+          "start": {
+            "line": 52,
+            "column": 0
+          },
+          "end": {
+            "line": 52,
+            "column": 51
+          }
+        },
+        "52": {
+          "start": {
+            "line": 53,
+            "column": 0
+          },
+          "end": {
+            "line": 53,
+            "column": 40
+          }
+        },
+        "53": {
+          "start": {
+            "line": 54,
+            "column": 0
+          },
+          "end": {
+            "line": 54,
+            "column": 30
+          }
+        },
+        "54": {
+          "start": {
+            "line": 55,
+            "column": 0
+          },
+          "end": {
+            "line": 55,
+            "column": 56
+          }
+        },
+        "55": {
+          "start": {
+            "line": 56,
+            "column": 0
+          },
+          "end": {
+            "line": 56,
+            "column": 58
+          }
+        },
+        "56": {
+          "start": {
+            "line": 57,
+            "column": 0
+          },
+          "end": {
+            "line": 57,
+            "column": 40
+          }
+        },
+        "57": {
+          "start": {
+            "line": 58,
+            "column": 0
+          },
+          "end": {
+            "line": 58,
+            "column": 43
+          }
+        },
+        "58": {
+          "start": {
+            "line": 59,
+            "column": 0
+          },
+          "end": {
+            "line": 59,
+            "column": 23
+          }
+        },
+        "59": {
+          "start": {
+            "line": 60,
+            "column": 0
+          },
+          "end": {
+            "line": 60,
+            "column": 32
+          }
+        },
+        "60": {
+          "start": {
+            "line": 61,
+            "column": 0
+          },
+          "end": {
+            "line": 61,
+            "column": 18
+          }
+        },
+        "61": {
+          "start": {
+            "line": 62,
+            "column": 0
+          },
+          "end": {
+            "line": 62,
+            "column": 6
+          }
+        },
+        "62": {
+          "start": {
+            "line": 63,
+            "column": 0
+          },
+          "end": {
+            "line": 63,
+            "column": 51
+          }
+        },
+        "63": {
+          "start": {
+            "line": 64,
+            "column": 0
+          },
+          "end": {
+            "line": 64,
+            "column": 4
+          }
+        },
+        "64": {
+          "start": {
+            "line": 65,
+            "column": 0
+          },
+          "end": {
+            "line": 65,
+            "column": 1
+          }
+        },
+        "65": {
+          "start": {
+            "line": 66,
+            "column": 0
+          },
+          "end": {
+            "line": 66,
+            "column": 0
+          }
+        },
+        "66": {
+          "start": {
+            "line": 67,
+            "column": 0
+          },
+          "end": {
+            "line": 67,
+            "column": 74
+          }
+        },
+        "67": {
+          "start": {
+            "line": 68,
+            "column": 0
+          },
+          "end": {
+            "line": 68,
+            "column": 62
+          }
+        },
+        "68": {
+          "start": {
+            "line": 69,
+            "column": 0
+          },
+          "end": {
+            "line": 69,
+            "column": 62
+          }
+        }
+      },
+      "s": {
+        "0": 1,
+        "1": 1,
+        "2": 6,
+        "3": 6,
+        "4": 3,
+        "5": 3,
+        "6": 3,
+        "7": 3,
+        "8": 3,
+        "9": 6,
+        "10": 6,
+        "11": 6,
+        "12": 6,
+        "13": 1,
+        "14": 8,
+        "15": 8,
+        "16": 2,
+        "17": 2,
+        "18": 6,
+        "19": 8,
+        "20": 1,
+        "21": 1,
+        "22": 5,
+        "23": 8,
+        "24": 8,
+        "25": 8,
+        "26": 8,
+        "27": 1,
+        "28": 18,
+        "29": 18,
+        "30": 18,
+        "31": 1,
+        "32": 3,
+        "33": 3,
+        "34": 1,
+        "35": 1,
+        "36": 2,
+        "37": 3,
+        "38": 3,
+        "39": 1,
+        "40": 3,
+        "41": 3,
+        "42": 3,
+        "43": 3,
+        "44": 3,
+        "45": 3,
+        "46": 3,
+        "47": 3,
+        "48": 3,
+        "49": 3,
+        "50": 3,
+        "51": 3,
+        "52": 3,
+        "53": 3,
+        "54": 3,
+        "55": 3,
+        "56": 3,
+        "57": 3,
+        "58": 3,
+        "59": 3,
+        "60": 3,
+        "61": 3,
+        "62": 3,
+        "63": 3,
+        "64": 3,
+        "65": 1,
+        "66": 1,
+        "67": 1,
+        "68": 1
+      },
+      "branchMap": {
+        "0": {
+          "type": "branch",
+          "line": 1,
+          "loc": {
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 69,
+              "column": 62
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 69,
+                "column": 62
+              }
+            }
+          ]
+        },
+        "1": {
+          "type": "branch",
+          "line": 3,
+          "loc": {
+            "start": {
+              "line": 3,
+              "column": 0
+            },
+            "end": {
+              "line": 13,
+              "column": 1
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 13,
+                "column": 1
+              }
+            }
+          ]
+        },
+        "2": {
+          "type": "branch",
+          "line": 4,
+          "loc": {
+            "start": {
+              "line": 4,
+              "column": 18
+            },
+            "end": {
+              "line": 10,
+              "column": 4
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 4,
+                "column": 18
+              },
+              "end": {
+                "line": 10,
+                "column": 4
+              }
+            }
+          ]
+        },
+        "3": {
+          "type": "branch",
+          "line": 10,
+          "loc": {
+            "start": {
+              "line": 10,
+              "column": 4
+            },
+            "end": {
+              "line": 10,
+              "column": 29
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 10,
+                "column": 4
+              },
+              "end": {
+                "line": 10,
+                "column": 29
+              }
+            }
+          ]
+        },
+        "4": {
+          "type": "branch",
+          "line": 11,
+          "loc": {
+            "start": {
+              "line": 11,
+              "column": 4
+            },
+            "end": {
+              "line": 11,
+              "column": 22
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 11,
+                "column": 4
+              },
+              "end": {
+                "line": 11,
+                "column": 22
+              }
+            }
+          ]
+        },
+        "5": {
+          "type": "branch",
+          "line": 15,
+          "loc": {
+            "start": {
+              "line": 15,
+              "column": 0
+            },
+            "end": {
+              "line": 27,
+              "column": 1
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 15,
+                "column": 0
+              },
+              "end": {
+                "line": 27,
+                "column": 1
+              }
+            }
+          ]
+        },
+        "6": {
+          "type": "branch",
+          "line": 16,
+          "loc": {
+            "start": {
+              "line": 16,
+              "column": 22
+            },
+            "end": {
+              "line": 18,
+              "column": 3
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 16,
+                "column": 22
+              },
+              "end": {
+                "line": 18,
+                "column": 3
+              }
+            }
+          ]
+        },
+        "7": {
+          "type": "branch",
+          "line": 19,
+          "loc": {
+            "start": {
+              "line": 19,
+              "column": -1
+            },
+            "end": {
+              "line": 20,
+              "column": 22
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 19,
+                "column": -1
+              },
+              "end": {
+                "line": 20,
+                "column": 22
+              }
+            }
+          ]
+        },
+        "8": {
+          "type": "branch",
+          "line": 20,
+          "loc": {
+            "start": {
+              "line": 20,
+              "column": 22
+            },
+            "end": {
+              "line": 22,
+              "column": 3
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 20,
+                "column": 22
+              },
+              "end": {
+                "line": 22,
+                "column": 3
+              }
+            }
+          ]
+        },
+        "9": {
+          "type": "branch",
+          "line": 23,
+          "loc": {
+            "start": {
+              "line": 23,
+              "column": -1
+            },
+            "end": {
+              "line": 24,
+              "column": 29
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 23,
+                "column": -1
+              },
+              "end": {
+                "line": 24,
+                "column": 29
+              }
+            }
+          ]
+        },
+        "10": {
+          "type": "branch",
+          "line": 24,
+          "loc": {
+            "start": {
+              "line": 24,
+              "column": 29
+            },
+            "end": {
+              "line": 25,
+              "column": 37
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 24,
+                "column": 29
+              },
+              "end": {
+                "line": 25,
+                "column": 37
+              }
+            }
+          ]
+        },
+        "11": {
+          "type": "branch",
+          "line": 25,
+          "loc": {
+            "start": {
+              "line": 25,
+              "column": 38
+            },
+            "end": {
+              "line": 26,
+              "column": 47
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 25,
+                "column": 38
+              },
+              "end": {
+                "line": 26,
+                "column": 47
+              }
+            }
+          ]
+        },
+        "12": {
+          "type": "branch",
+          "line": 29,
+          "loc": {
+            "start": {
+              "line": 29,
+              "column": 0
+            },
+            "end": {
+              "line": 31,
+              "column": 1
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 29,
+                "column": 0
+              },
+              "end": {
+                "line": 31,
+                "column": 1
+              }
+            }
+          ]
+        },
+        "13": {
+          "type": "branch",
+          "line": 30,
+          "loc": {
+            "start": {
+              "line": 30,
+              "column": 15
+            },
+            "end": {
+              "line": 30,
+              "column": 22
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 30,
+                "column": 15
+              },
+              "end": {
+                "line": 30,
+                "column": 22
+              }
+            }
+          ]
+        },
+        "14": {
+          "type": "branch",
+          "line": 33,
+          "loc": {
+            "start": {
+              "line": 33,
+              "column": 0
+            },
+            "end": {
+              "line": 39,
+              "column": 1
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 33,
+                "column": 0
+              },
+              "end": {
+                "line": 39,
+                "column": 1
+              }
+            }
+          ]
+        },
+        "15": {
+          "type": "branch",
+          "line": 34,
+          "loc": {
+            "start": {
+              "line": 34,
+              "column": 25
+            },
+            "end": {
+              "line": 36,
+              "column": 3
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 34,
+                "column": 25
+              },
+              "end": {
+                "line": 36,
+                "column": 3
+              }
+            }
+          ]
+        },
+        "16": {
+          "type": "branch",
+          "line": 37,
+          "loc": {
+            "start": {
+              "line": 37,
+              "column": -1
+            },
+            "end": {
+              "line": 38,
+              "column": 26
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 37,
+                "column": -1
+              },
+              "end": {
+                "line": 38,
+                "column": 26
+              }
+            }
+          ]
+        },
+        "17": {
+          "type": "branch",
+          "line": 38,
+          "loc": {
+            "start": {
+              "line": 38,
+              "column": 26
+            },
+            "end": {
+              "line": 38,
+              "column": 40
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 38,
+                "column": 26
+              },
+              "end": {
+                "line": 38,
+                "column": 40
+              }
+            }
+          ]
+        },
+        "18": {
+          "type": "branch",
+          "line": 41,
+          "loc": {
+            "start": {
+              "line": 41,
+              "column": 0
+            },
+            "end": {
+              "line": 65,
+              "column": 1
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 41,
+                "column": 0
+              },
+              "end": {
+                "line": 65,
+                "column": 1
+              }
+            }
+          ]
+        },
+        "19": {
+          "type": "branch",
+          "line": 42,
+          "loc": {
+            "start": {
+              "line": 42,
+              "column": 34
+            },
+            "end": {
+              "line": 42,
+              "column": 39
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 42,
+                "column": 34
+              },
+              "end": {
+                "line": 42,
+                "column": 39
+              }
+            }
+          ]
+        },
+        "20": {
+          "type": "branch",
+          "line": 50,
+          "loc": {
+            "start": {
+              "line": 50,
+              "column": 25
+            },
+            "end": {
+              "line": 50,
+              "column": 41
+            }
+          },
+          "locations": [
+            {
+              "start": {
+                "line": 50,
+                "column": 25
+              },
+              "end": {
+                "line": 50,
+                "column": 41
+              }
+            }
+          ]
+        }
+      },
+      "b": {
+        "0": [
+          1
+        ],
+        "1": [
+          6
+        ],
+        "2": [
+          3
+        ],
+        "3": [
+          2
+        ],
+        "4": [
+          1
+        ],
+        "5": [
+          8
+        ],
+        "6": [
+          2
+        ],
+        "7": [
+          6
+        ],
+        "8": [
+          1
+        ],
+        "9": [
+          5
+        ],
+        "10": [
+          2
+        ],
+        "11": [
+          1
+        ],
+        "12": [
+          18
+        ],
+        "13": [
+          12
+        ],
+        "14": [
+          3
+        ],
+        "15": [
+          1
+        ],
+        "16": [
+          2
+        ],
+        "17": [
+          1
+        ],
+        "18": [
+          3
+        ],
+        "19": [
+          1
+        ],
+        "20": [
+          2
+        ]
+      },
+      "fnMap": {
+        "0": {
+          "name": "normalizeInstallTimestamp",
+          "decl": {
+            "start": {
+              "line": 3,
+              "column": 0
+            },
+            "end": {
+              "line": 13,
+              "column": 1
+            }
+          },
+          "loc": {
+            "start": {
+              "line": 3,
+              "column": 0
+            },
+            "end": {
+              "line": 13,
+              "column": 1
+            }
+          },
+          "line": 3
+        },
+        "1": {
+          "name": "getInstallFreshdeskDomain",
+          "decl": {
+            "start": {
+              "line": 15,
+              "column": 0
+            },
+            "end": {
+              "line": 27,
+              "column": 1
+            }
+          },
+          "loc": {
+            "start": {
+              "line": 15,
+              "column": 0
+            },
+            "end": {
+              "line": 27,
+              "column": 1
+            }
+          },
+          "line": 15
+        },
+        "2": {
+          "name": "valueOrNull",
+          "decl": {
+            "start": {
+              "line": 29,
+              "column": 0
+            },
+            "end": {
+              "line": 31,
+              "column": 1
+            }
+          },
+          "loc": {
+            "start": {
+              "line": 29,
+              "column": 0
+            },
+            "end": {
+              "line": 31,
+              "column": 1
+            }
+          },
+          "line": 29
+        },
+        "3": {
+          "name": "getConsentTimestamp",
+          "decl": {
+            "start": {
+              "line": 33,
+              "column": 0
+            },
+            "end": {
+              "line": 39,
+              "column": 1
+            }
+          },
+          "loc": {
+            "start": {
+              "line": 33,
+              "column": 0
+            },
+            "end": {
+              "line": 39,
+              "column": 1
+            }
+          },
+          "line": 33
+        },
+        "4": {
+          "name": "buildInstallationCapturePayload",
+          "decl": {
+            "start": {
+              "line": 41,
+              "column": 0
+            },
+            "end": {
+              "line": 65,
+              "column": 1
+            }
+          },
+          "loc": {
+            "start": {
+              "line": 41,
+              "column": 0
+            },
+            "end": {
+              "line": 65,
+              "column": 1
+            }
+          },
+          "line": 41
+        }
+      },
+      "f": {
+        "0": 6,
+        "1": 8,
+        "2": 18,
+        "3": 3,
+        "4": 3
+      }
+    }
+  },
+  "unitTestCoverageSummary": {
+    "lines": {
+      "total": 71,
+      "covered": 71,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 71,
+      "covered": 71,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 5,
+      "covered": 5,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 22,
+      "covered": 22,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": "Unknown"
     }
   }
 }

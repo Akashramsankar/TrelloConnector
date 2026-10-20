@@ -56,6 +56,29 @@ const state = {
 
 const refs = {};
 const FRESHDESK_KEY_PLACEHOLDER = "Freshdesk API Key";
+const PROMO_APPS = [
+  {
+    name: "Schedule Replies Pro",
+    description: "Schedule Freshdesk replies for the exact follow-up moment.",
+    appId: "378042",
+    publicUrl: "https://www.freshworks.com/apps/schedule_replies_pro/",
+    icon: "./assets/schedule-replies-pro.png",
+  },
+  {
+    name: "Attachments Preview Pro",
+    description: "Preview ticket attachments faster without extra downloads.",
+    appId: "378223",
+    publicUrl: "https://www.freshworks.com/apps/attachments_preview_pro_2/",
+    icon: "./assets/attachments-preview-pro.png",
+  },
+  {
+    name: "Schedule Ticket Pro",
+    description: "Plan ticket actions and reminders around team workflows.",
+    appId: "378481",
+    publicUrl: "https://www.freshworks.com/apps/schedule_ticket_pro/",
+    icon: "./assets/schedule-ticket-pro.png",
+  },
+];
 
 document.addEventListener("DOMContentLoaded", () => {
   void ensureInitialized();
@@ -71,6 +94,7 @@ function ensureInitialized() {
 async function initialize() {
   state.client = await app.initialized();
   bindRefs();
+  renderPromoApps();
   bindEvents();
   state.initialized = true;
   await hydrateFromConfigs(state.savedConfigs);
@@ -90,6 +114,12 @@ function bindRefs() {
   refs.verifyFreshdeskBtn = document.getElementById("verifyFreshdeskBtn");
   refs.freshdeskStatusLine = document.getElementById("freshdeskStatusLine");
   refs.freshdeskMessage = document.getElementById("freshdeskMessage");
+
+  refs.installerName = document.getElementById("installerName");
+  refs.installerNameMessage = document.getElementById("installerNameMessage");
+  refs.installerEmail = document.getElementById("installerEmail");
+  refs.installerEmailMessage = document.getElementById("installerEmailMessage");
+  refs.promoApps = document.getElementById("promoApps");
 
   refs.notificationSettingsSection = document.getElementById("notificationSettingsSection");
   refs.trelloToFreshdeskList = document.getElementById("trelloToFreshdeskList");
@@ -139,6 +169,14 @@ function bindEvents() {
   refs.domain.addEventListener("input", () => {
     clearMessage(refs.freshdeskMessage);
     clearFreshdeskVerification();
+    renderPromoApps();
+  });
+
+  refs.installerName.addEventListener("input", () => {
+    clearMessage(refs.installerNameMessage);
+  });
+  refs.installerEmail.addEventListener("input", () => {
+    clearMessage(refs.installerEmailMessage);
   });
 
   refs.apiKey.addEventListener("input", () => {
@@ -165,6 +203,9 @@ async function hydrateFromConfigs(configs) {
     const safeConfigs = configs || {};
 
     refs.domain.value = safeConfigs.domain || "";
+    refs.installerName.value = safeConfigs.installer_name || "";
+    refs.installerEmail.value = safeConfigs.installer_email || "";
+    renderPromoApps();
     refs.apiKey.value = safeConfigs.api_key ? getMaskedSecretPlaceholder() : "";
     refs.apiKey.setAttribute("placeholder", FRESHDESK_KEY_PLACEHOLDER);
 
@@ -659,6 +700,119 @@ function normalizeNotificationPreferences(value, events, fallbackValue) {
   return output;
 }
 
+function renderPromoApps() {
+  if (!refs.promoApps) {
+    return;
+  }
+
+  refs.promoApps.innerHTML = "";
+  PROMO_APPS.forEach((appConfig) => {
+    const link = document.createElement("a");
+    link.className = "promo-card";
+    link.href = getPromoAppUrl(appConfig);
+    link.target = "_blank";
+    link.rel = "noopener";
+
+    const icon = document.createElement("img");
+    icon.className = "promo-icon";
+    icon.src = appConfig.icon;
+    icon.alt = "";
+
+    const body = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "promo-title";
+    title.textContent = appConfig.name;
+
+    const description = document.createElement("div");
+    description.className = "promo-description";
+    description.textContent = appConfig.description;
+
+    body.appendChild(title);
+    body.appendChild(description);
+    link.appendChild(icon);
+    link.appendChild(body);
+    refs.promoApps.appendChild(link);
+  });
+}
+
+function getConfiguredFreshdeskDomain() {
+  return normalizeDomain((refs.domain && refs.domain.value) || state.savedConfigs.domain || "");
+}
+
+// freshworks.com pages are blocked when opened from the settings iframe, so link to the
+// account's own in-product marketplace whenever the Freshdesk domain is known.
+function getPromoAppUrl(appConfig) {
+  const domain = getConfiguredFreshdeskDomain();
+
+  if (!domain || !domain.includes(".freshdesk.com")) {
+    return appConfig.publicUrl;
+  }
+
+  const params = new URLSearchParams({
+    route: "app",
+    id: appConfig.appId,
+    utmCampaign: "REC_EXIST_CUST",
+  });
+
+  return `https://${domain}/a/admin/marketplace/gallery?${params.toString()}`;
+}
+
+function getInstallerName() {
+  return String(refs.installerName.value || "").trim();
+}
+
+function getInstallerEmail() {
+  return String(refs.installerEmail.value || "").trim().toLowerCase();
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function getAppMetadata() {
+  return window.FALCON_APP_METADATA || {
+    appSlug: "freshdesk-trello-connector",
+    appVersion: "unknown",
+  };
+}
+
+function hasExistingInstallationConfig() {
+  const configs = state.savedConfigs || {};
+  return Boolean(configs.domain || configs.installer_email || configs.api_key);
+}
+
+function buildSettingsCapturePayload() {
+  const metadata = getAppMetadata();
+
+  return {
+    app_slug: metadata.appSlug,
+    app_version: metadata.appVersion,
+    event: "settingsUpdate",
+    freshdesk_domain: normalizeDomain(refs.domain.value),
+    installed_at: new Date().toISOString(),
+    installer_name: getInstallerName(),
+    installer_email: getInstallerEmail(),
+    marketing_consent: false,
+    consent_timestamp: null,
+  };
+}
+
+// First installs are captured by the onAppInstall server handler; this covers later settings edits.
+async function captureSettingsUpdate() {
+  if (!hasExistingInstallationConfig()) {
+    return;
+  }
+
+  try {
+    await state.client.request.invokeTemplate("capture_installation", {
+      context: {},
+      body: JSON.stringify(buildSettingsCapturePayload()),
+    });
+  } catch (error) {
+    console.error("Settings contact capture failed:", error);
+  }
+}
+
 function showMessage(element, message, type) {
   element.textContent = message;
   element.className = `message ${type}`;
@@ -716,6 +870,9 @@ function postConfigs() {
     trello_member_url: state.connectedTrelloMember ? state.connectedTrelloMember.url : "",
     domain: normalizeDomain(refs.domain.value),
     api_key: getActiveFreshdeskAuth(),
+    installer_name: getInstallerName(),
+    installer_email: getInstallerEmail(),
+    marketing_consent: false,
     trello_to_freshdesk_sync_mode: resolvePrimaryNotificationMode(
       state.notificationPreferences.trelloToFreshdesk,
       DEFAULT_TRELLO_TO_FRESHDESK_ACTION
@@ -764,5 +921,29 @@ async function validate() {
     return false;
   }
 
+  const installerName = getInstallerName();
+  const installerEmail = getInstallerEmail();
+
+  if (!installerName) {
+    showMessage(refs.installerNameMessage, "Please enter your full name.", "error");
+    return false;
+  }
+
+  if (!installerEmail) {
+    showMessage(refs.installerEmailMessage, "Please enter your email address.", "error");
+    return false;
+  }
+
+  if (!isValidEmail(installerEmail)) {
+    showMessage(refs.installerEmailMessage, "Please enter a valid email address.", "error");
+    return false;
+  }
+
+  await captureSettingsUpdate();
+
   return true;
 }
+
+window.postConfigs = postConfigs;
+window.getConfigs = getConfigs;
+window.validate = validate;

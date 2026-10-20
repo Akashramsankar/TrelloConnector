@@ -1,3 +1,6 @@
+const {
+  buildInstallationCapturePayload,
+} = require("./installation_capture");
 const LINK_KEY_PREFIX = "clickup_ticket_links_v1:";
 const TASK_LINK_KEY_PREFIX = "clickup_task_links_v1:";
 const DASHBOARD_SUMMARY_KEY = "clickup_dashboard_summary_v1";
@@ -4123,8 +4126,43 @@ async function syncTrelloCardToFreshdeskTickets(cardId, settings, payload) {
   return results;
 }
 
+async function captureInstallation(payload, fallbackEvent) {
+  try {
+    await $request.invokeTemplate("capture_installation", {
+      context: {},
+      body: JSON.stringify(buildInstallationCapturePayload(payload || {}, fallbackEvent)),
+    });
+  } catch (error) {
+    console.error(`Installation contact capture failed (${fallbackEvent}):`, error);
+  }
+}
+
+function validateInstallCaptureSecret(args) {
+  if (!args || !Object.prototype.hasOwnProperty.call(args, "install_capture_secret")) {
+    return null;
+  }
+
+  const secret = args.install_capture_secret;
+  if (typeof secret !== "string" || secret.trim().length === 0) {
+    return { message: "Installation capture secret is required." };
+  }
+
+  return null;
+}
+
 exports = {
+  onSettingsUpdate(args) {
+    const validationError = validateInstallCaptureSecret(args);
+
+    if (validationError) {
+      return renderData(validationError);
+    }
+
+    return renderData(null, { success: true });
+  },
+
   async onAppInstall(payload) {
+    await captureInstallation(payload, "onAppInstall");
     try {
       const settings = resolveSettings(payload);
       await writeTrelloRuntimeSettings(settings);
@@ -4143,6 +4181,7 @@ exports = {
   },
 
   async afterAppUpdate(payload) {
+    await captureInstallation(payload, "afterAppUpdate");
     try {
       const settings = resolveSettings(payload);
       const runtimeSettings = await writeTrelloRuntimeSettings(settings);

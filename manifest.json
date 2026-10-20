@@ -43,7 +43,8 @@
         "freshdesk_note_create": {},
         "freshdesk_note_create_live": {},
         "clickup_comment": {},
-        "clickup_set_field": {}
+        "clickup_set_field": {},
+        "capture_installation": {}
       },
       "events": {
         "onAppInstall": {
@@ -101,10 +102,13 @@
   },
   "engines": {
     "node": "24.11.0",
-    "fdk": "10.0.1"
+    "fdk": "10.1.9"
   },
   "app": {
     "tracking_id": "s9hytuyr897n65hk7927",
     "start_time": "2025-06-07T14:05:19.420Z"
+  },
+  "scripts": {
+    "fdk-unit-test": "vitest run --coverage"
   }
 }
